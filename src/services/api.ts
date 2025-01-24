@@ -1,7 +1,7 @@
 import axios, { AxiosError } from 'axios';
 import { toast } from 'react-hot-toast';
 
-const API_URL = 'http://localhost:3000/api';
+const API_URL = 'https://genx-backend-rdzx.onrender.com/api';
 
 console.log('API URL:', API_URL); // Log the API URL being used
 
@@ -9,7 +9,8 @@ console.log('API URL:', API_URL); // Log the API URL being used
 const api = axios.create({
   baseURL: API_URL,
   headers: {
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
   },
   withCredentials: true
 });
