@@ -1,8 +1,8 @@
 import React from 'react';
-import { Instagram, Linkedin } from 'lucide-react';
+import { Instagram, Linkedin, Mail } from 'lucide-react';
+import { FaLinkedin, FaGithub, FaEnvelope } from 'react-icons/fa';
 import Abhay from './Abhay.png';
 import Prakhar from './prakhar.jpg';
-
 import Ankit from './Ankit.jpg';
 import Anjali from './Anjali.jpg';
 import Braj from './Braj.jpg';
@@ -22,250 +22,347 @@ import Suruchi from './Suruchi.jpg';
 import Mentor from './mentor.jpg';
 
 interface TeamMember {
+  id: number;
   name: string;
   role: string;
   image: string;
-  instagram?: string;
   linkedin?: string;
+  github?: string;
+  email?: string;
+  instagram?: string;
 }
 
 const mentor: TeamMember = {
+  id: 1,
   name: 'Mr. Om Prakash',
-  role: 'HOD Of CSE Department',
+  role: 'SPOC, GenX',
   image: Mentor,
-  
 };
 
 const founder: TeamMember = {
+  id: 2,
   name: 'Niraj Kumar',
-  role: '',
+  role: 'Founder, GenX',
   image: Niraj,
-  instagram: 'https://instagram.com/nirajkumar',
-  linkedin: 'https://linkedin.com/in/nirajkumar'
+  instagram: 'https://www.instagram.com/avinash.vats_?igsh=MW4yZGpyZzFnYjBwag%3D%3D',
+  linkedin: 'https://www.linkedin.com/in/niraj-vats/'
 };
 
 const leaders: TeamMember[] = [
   {
+    id: 3,
     name: 'Leader Name',
     role: 'Leader',
     image: '/leader.png',
-    instagram: 'https://instagram.com/leader',
-    linkedin: 'https://linkedin.com/in/leader'
+    instagram: 'https://instagram.com/leade..........r',
+    linkedin: 'https://linkedin.com/in/leader.........'
   },
   {
+    id: 4,
     name: 'Co-Leader Name',
     role: 'Co-Leader',
     image: '/coleader.png',
-    instagram: 'https://instagram.com/coleader',
-    linkedin: 'https://linkedin.com/in/coleader'
+    instagram: 'https://instagram.com/coleader....',
+    linkedin: 'https://linkedin.com/in/coleader...'
   }
 ];
 
 const domainLeads: TeamMember[] = [
- 
   {
+    id: 5,
     name: 'Abhay Kumar',
     role: 'Robotics & IoT Lead',
     image: Abhay,
-    instagram: 'https://instagram.com/abhay',
-    linkedin: 'https://linkedin.com/in/abhay'
+    instagram: 'https://www.instagram.com/abhay_kr.0705/',
+    linkedin: 'https://www.linkedin.com/in/abhay-kumar-81b2a8288/'
   },
   {
+    id: 6,
     name: 'Devika Kumari',
     role: 'Competitive Programming Lead',
     image: Devika,
-    instagram: 'https://instagram.com/devika',
-    linkedin: 'https://linkedin.com/in/devika'
+    instagram: 'https://www.instagram.com/devikka_kummari/',
+    linkedin: 'https://www.linkedin.com/in/devika-kumari-1bb2a22a6?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app'
   },
   {
+    id: 7,
     name: 'Abhishek Kumar',
     role: 'Creativity Lead',
     image: AbhishekK,
-    instagram: 'https://instagram.com/abhishek.k',
-    linkedin: 'https://linkedin.com/in/abhishek.k'
+    instagram: 'https://www.instagram.com/_abhii__shek_?igsh=ZWhjMGxxZ3A0NmJ4',
+    linkedin: 'https://www.linkedin.com/in/abhishek-kumar-4ba2801a7?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app'
   },
   {
+    id: 8,
     name: 'Abhiraj Kumar',
     role: 'Outreach Lead',
     image: Abhiraj,
-    instagram: 'https://instagram.com/abhiraj',
-    linkedin: 'https://linkedin.com/in/abhiraj'
+    instagram: 'https://www.instagram.com/instabhiraj/profilecard/?igsh=aHB6dGthYzN5ZXRv',
+    linkedin: 'https://www.linkedin.com/in/abhiraj23'
   },
   {
-    name: '..........',
+    id: 9,
+    name: 'Prakhar Prasad',
     role: 'Web Development Lead',
-    image: blank,
-    instagram: 'https://instagram.com/supriya',
-    linkedin: 'https://linkedin.com/in/supriya'
+    image: Prakhar,
+    instagram: 'https://www.instagram.com/prakharprasad4?igsh=MTgyYjNuMHgwdTJxcA==',
+    linkedin: 'https://www.linkedin.com/in/prakhar-prasad-0887b5343?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app'
   },
   {
+    id: 10,
     name: 'Abhishek Singh',
     role: 'App Development Lead',
     image: Abhishek,
-    instagram: 'https://instagram.com/abhishek',
-    linkedin: 'https://linkedin.com/in/abhishek'
+    instagram: 'https://instagram.com/abhis..........0hek',
+    linkedin: 'https://www.linkedin.com/in/abhisheksinghexpert'
   },
   {
+    id: 11,
     name: 'Abhishek Jha',
     role: 'Cybersecurity Lead',
     image: AbhishekKumarJha,
-    instagram: 'https://instagram.com/abhishek.j',
-    linkedin: 'https://linkedin.com/in/abhishek.j'
+    instagram: 'https://instagram.com/a..0bhishek.j',
+    linkedin: 'https://linkedin.com/in/abh.......0ishek.j'
   },
   {
+    id: 12,
     name: '..........',
     role: 'AI ML Lead',
     image: blank,
-    instagram: 'https://instagram.com/supriya',
-    linkedin: 'https://linkedin.com/in/supriya'
+    instagram: 'https://instagram.com/supri.....ya',
+    linkedin: 'https://linkedin.com/in/supr.....iya'
   },
-  
 ];
 
 const domainCoLeads: TeamMember[] = [
-
+  
   {
-    name: 'Prakhar Prasad',
-    role: 'Web Development Co-Lead',
-    image: Prakhar,
-    instagram: 'https://instagram.com/prakhar',
-    linkedin: 'https://linkedin.com/in/prakhar'
-  },
-  {
+    id: 13,
     name: 'Ankit Upadhyay',
     role: 'App Development Co-Lead',
     image: AnkitUpadhyay,
-    instagram: 'https://instagram.com/ankit',
-    linkedin: 'https://linkedin.com/in/ankit'
+    instagram: 'https://instagram.com/',
+    linkedin: 'https://www.linkedin.com/in/ankit-upadhyay-083058287?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app'
   },
   {
+    id: 14,
+    name: 'Suruchi Kumari',
+    role: 'Outreach Co-Lead',
+    image: Suruchi,
+    instagram: 'https://www.instagram.com/invites/contact/?utm_source=ig_contact_invite&utm_medium=copy_link&utm_content=tf01d2uig_contact_invite&utm_medium=copy_link&utm_content=tf01d2u',
+    linkedin: 'https://www.linkedin.com/in/suruchi2023'
+  },
+  {
+    id: 15,
     name: 'Anjali Chauhan',
     role: 'Robotics & IoT Co-Lead',
     image: Anjali,
-    instagram: 'https://instagram.com/anjali',
-    linkedin: 'https://linkedin.com/in/anjali'
+    instagram: 'https://instagram.com/a......0njali',
+    linkedin: 'https://www.linkedin.com/in/anjali-c-637619331?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app'
   },
   {
+    id: 16,
     name: 'Rakhee Kumari',
     role: 'Competitive Programming Co-Lead',
     image: Rakhee,
-    instagram: 'https://instagram.com/rakhee',
-    linkedin: 'https://linkedin.com/in/rakhee'
+    instagram: 'https://instagram.com/rakhee..0.0.0',
+    linkedin: 'https://www.linkedin.com/in/rakhee-768943281?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app'
   },
   {
+    id: 17,
     name: 'Braj Kumar',
     role: 'Creativity Co-Lead',
     image: Braj,
-    instagram: 'https://instagram.com/braj',
-    linkedin: 'https://linkedin.com/in/braj'
+    instagram: 'https://www.instagram.com/braj.here',
+    linkedin: 'https://www.linkedin.com/in/abbraj'
   },
   {
+    id: 18,
     name: 'Saurabh Kumar',
     role: 'Cybersecurity Co-Lead',
     image: Saurabh,
-    instagram: 'https://instagram.com/saurabh',
-    linkedin: 'https://linkedin.com/in/saurabh'
+    instagram: 'https://www.instagram.com/_hmm.saurabh?igsh=aWxhejhubnBpb2h1',
+    linkedin: 'https://www.linkedin.com/in/saurabh-kumar-b85597322?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app'
+  },
+  
+  {
+    id: 19,
+    name: '.............',
+    role: 'Web Development Co-Lead',
+    image: blank,
+    instagram: 'https://instagram.com/....',
+    linkedin: 'https://linkedin.com/in/....'
   },
   {
-    name: 'Suruchi Sharma',
-    role: 'Outreach Co-Lead',
-    image: Suruchi,
-    instagram: 'https://instagram.com/suruchi',
-    linkedin: 'https://linkedin.com/in/suruchi'
-  },
-  {
+    id: 20,
     name: '..........',
     role: 'AI ML Co-Lead',
     image: blank,
-    instagram: 'https://instagram.com/supriya',
-    linkedin: 'https://linkedin.com/in/supriya'
+    instagram: 'https://instagram.com/supri......0ya',
+    linkedin: 'https://linkedin.com/in/supri.0...0ya'
   }
 ];
 
-const TeamMemberCard = ({ member }: { member: TeamMember }) => (
-  <div className="bg-white rounded-lg shadow-md p-6 text-center transform transition-transform hover:scale-105">
-    <img
-      src={member.image}
-      alt={member.name}
-      className="w-32 h-32 rounded-full mx-auto mb-4 object-cover"
-    />
-    <h3 className="text-xl font-semibold mb-2">{member.name}</h3>
-    <p className="text-gray-600 mb-4">{member.role}</p>
-    <div className="flex justify-center space-x-4">
-      {member.instagram && (
-        <a
-          href={member.instagram}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-pink-600 hover:text-pink-700"
-        >
-          <Instagram className="h-5 w-5" />
-        </a>
-      )}
-      {member.linkedin && (
-        <a
-          href={member.linkedin}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-blue-600 hover:text-blue-700"
-        >
-          <Linkedin className="h-5 w-5" />
-        </a>
-      )}
+const TeamMemberCard: React.FC<{ member: TeamMember }> = ({ member }) => (
+  <div className="group relative overflow-hidden rounded-xl bg-white shadow-lg transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl h-full flex flex-col">
+    <div className="aspect-square overflow-hidden flex-shrink-0">
+      <img
+        src={member.image}
+        alt={member.name}
+        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+      />
+    </div>
+    <div className="p-4 text-center bg-white flex-grow flex flex-col justify-between">
+      <div>
+        <h3 className="text-xl font-bold text-gray-800 mb-1 group-hover:text-blue-600 transition-colors duration-300">
+          {member.name}
+        </h3>
+        <p className="text-sm text-gray-600 mb-3 font-medium">{member.role}</p>
+      </div>
+      <div className="flex justify-center space-x-7 pt-2 border-t border-gray-100">
+        {member.linkedin && (
+          <a
+            href={member.linkedin}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="transform hover:scale-110 transition-transform duration-200"
+          >
+            <Linkedin className="h-5 w-5 text-gray-600 hover:text-blue-600" />
+          </a>
+        )}
+        {member.github && (
+          <a
+            href={member.github}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="transform hover:scale-110 transition-transform duration-200"
+          >
+            <FaGithub className="h-5 w-5 text-gray-600 hover:text-gray-800" />
+          </a>
+        )}
+        {member.instagram && (
+          <a
+            href={member.instagram}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="transform hover:scale-110 transition-transform duration-200"
+          >
+            <Instagram className="h-5 w-5 text-gray-600 hover:text-pink-600" />
+          </a>
+        )}
+        {member.email && (
+          <a
+            href={`mailto:${member.email}`}
+            className="transform hover:scale-110 transition-transform duration-200"
+          >
+            <Mail className="h-5 w-5 text-gray-600 hover:text-red-600" />
+          </a>
+        )}
+      </div>
     </div>
   </div>
 );
 
+const SectionTitle: React.FC<{ title: string }> = ({ title }) => (
+  <h2 className="text-3xl font-bold text-center mb-12">
+    <span className="bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text">
+      {title}
+    </span>
+  </h2>
+);
+
 const Team = () => {
   return (
-    <div className="min-h-screen pt-16 bg-gray-50">
-      <section className="container mx-auto px-4 py-12">
-        <h1 className="text-4xl font-bold text-center mb-12">Our Team</h1>
-        
-        {/* Mentor and Founder Section */}
-        <div className="mb-16">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            <div className="w-full">
-              <h2 className="text-2xl font-bold text-center mb-4">Mentor</h2>
-              <TeamMemberCard member={mentor} />
-            </div>
-            <div className="w-full">
-              <h2 className="text-2xl font-bold text-center mb-4">Founder</h2>
-              <TeamMemberCard member={founder} />
-            </div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-indigo-50 py-20">
+      <div className="container mx-auto px-4">
+        {/* Hero Section */}
+        <div className="text-center mb-20 animate-fadeIn">
+          <h1 className="text-5xl font-black mb-4">
+            <span className="bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text">
+              Meet Our Team
+            </span>
+          </h1>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            We are a passionate team of developers dedicated to creating innovative solutions and fostering a community of tech enthusiasts.
+          </p>
+        </div>
+
+        {/* Mentor & Founder Section */}
+        <div className="mb-24">
+          <SectionTitle title="Club Mentorship" />
+          <div className="flex flex-col sm:flex-row justify-center gap-6 lg:gap-8 max-w-7xl mx-auto">
+            {mentor && (
+              <div className="w-full sm:w-1/3 lg:w-1/4 animate-fadeIn">
+                <TeamMemberCard member={mentor} />
+              </div>
+            )}
+            {founder && (
+              <div className="w-full sm:w-1/3 lg:w-1/4 animate-fadeIn">
+                <TeamMemberCard member={founder} />
+              </div>
+            )}
           </div>
         </div>
 
         {/* Leaders Section */}
-        <div className="mb-16">
-          <h2 className="text-2xl font-bold text-center mb-8">Leadership</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        <div className="mb-24">
+          <SectionTitle title="Club Leadership" />
+          <div className="flex flex-col sm:flex-row justify-center gap-6 lg:gap-8 max-w-7xl mx-auto">
             {leaders.map((leader, index) => (
-              <TeamMemberCard key={index} member={leader} />
+              <div key={leader.id} className="w-full sm:w-1/3 lg:w-1/4 animate-fadeIn">
+                <TeamMemberCard member={leader} />
+              </div>
             ))}
           </div>
         </div>
 
         {/* Domain Leads Section */}
-        <div className="mb-16">
-          <h2 className="text-2xl font-bold text-center mb-8">Domain Leads</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {domainLeads.map((lead, index) => (
-              <TeamMemberCard key={index} member={lead} />
+        <div className="mb-24">
+          <SectionTitle title="Domain Leads" />
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 max-w-7xl mx-auto">
+            {domainLeads.map((lead) => (
+              <div key={lead.id} className="col-span-1 h-full animate-fadeIn">
+                <div className="h-full">
+                  <TeamMemberCard member={lead} />
+                </div>
+              </div>
             ))}
           </div>
         </div>
 
         {/* Domain Co-Leads Section */}
-        <div className="mb-16">
-          <h2 className="text-2xl font-bold text-center mb-8">Domain Co-Leads</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {domainCoLeads.map((colead, index) => (
-              <TeamMemberCard key={index} member={colead} />
+        <div className="mb-24">
+          <SectionTitle title="Domain Co-Leads" />
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 max-w-7xl mx-auto">
+            {domainCoLeads.map((coLead) => (
+              <div key={coLead.id} className="col-span-1 h-full animate-fadeIn">
+                <div className="h-full">
+                  <TeamMemberCard member={coLead} />
+                </div>
+              </div>
             ))}
           </div>
         </div>
-      </section>
+
+        {/* Join Us Section */}
+        <div className="mt-20 text-center animate-fadeIn">
+          <h2 className="text-3xl font-bold mb-6">
+            <span className="bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text">
+              Join Our Community
+            </span>
+          </h2>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-8">
+            We're always looking for passionate individuals to join our team. If you're interested in contributing to our mission, reach out to us!
+          </p>
+          <a
+            href="mailto:genx.gdc@gmail.com"
+            className="inline-flex items-center px-8 py-3 text-lg font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl"
+          >
+            <Mail className="mr-2" />
+            Get in Touch
+          </a>
+        </div>
+      </div>
     </div>
   );
 };

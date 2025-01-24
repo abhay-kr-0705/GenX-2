@@ -1,21 +1,26 @@
 import { Gallery, GalleryResponse } from '../types/gallery';
-import { supabase } from '../lib/supabase';
+import { getGalleryPhotos } from '../services/api';
 
 export const transformGalleryData = async (galleries: GalleryResponse[]): Promise<Gallery[]> => {
-  return Promise.all(
-    galleries.map(async (gallery) => {
-      const { data: photos } = await supabase
-        .from('gallery_photos')
-        .select('url')
-        .eq('gallery_id', gallery.id)
-        .order('order')
-        .limit(1);
+  try {
+    const photos = await getGalleryPhotos();
+    
+    return galleries.map((gallery) => {
+      const galleryPhotos = photos.filter((photo) => photo.gallery_id === gallery.id);
+      const thumbnailUrl = galleryPhotos.length > 0 ? galleryPhotos[0].url : null;
 
       return {
         ...gallery,
-        photo_count: gallery.photo_count?.count || 0,
-        thumbnail_url: photos?.[0]?.url
+        photos: galleryPhotos,
+        thumbnail_url: thumbnailUrl
       };
-    })
-  );
+    });
+  } catch (error) {
+    console.error('Error transforming gallery data:', error);
+    return galleries.map(gallery => ({
+      ...gallery,
+      photos: [],
+      thumbnail_url: null
+    }));
+  }
 };

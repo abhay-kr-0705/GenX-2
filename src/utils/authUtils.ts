@@ -1,39 +1,41 @@
-import { supabase } from '../lib/supabase';
+import { login, register, getCurrentUser } from '../services/api';
+import { setAuthToken, setUser, getAuthToken, clearAuth } from './localStorage';
+import { handleError } from './errorHandling';
 
-export const checkAdminAccess = async (userId: string): Promise<boolean> => {
+export const loginWithEmail = async (email: string, password: string) => {
   try {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', userId)
-      .maybeSingle();
-
-    if (error) {
-      console.error('Error checking admin access:', error);
-      return false;
-    }
-
-    const isAdmin = data?.role === 'admin' || data?.role === 'superadmin';
-    localStorage.setItem('userRole', data?.role || 'user');
-    return isAdmin;
+    const { data } = await login(email, password);
+    setAuthToken(data.token);
+    setUser(data.user);
+    return data.user;
   } catch (error) {
-    console.error('Error checking admin access:', error);
-    return false;
+    handleError(error, 'Login failed');
+    throw error;
   }
 };
 
-export const refreshUserRole = async (userId: string): Promise<void> => {
+export const registerWithEmail = async (email: string, password: string, name: string) => {
   try {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', userId)
-      .maybeSingle();
-
-    if (error) throw error;
-    localStorage.setItem('userRole', data?.role || 'user');
+    const { data } = await register(email, password, name);
+    setAuthToken(data.token);
+    setUser(data.user);
+    return data.user;
   } catch (error) {
-    console.error('Error refreshing user role:', error);
-    localStorage.setItem('userRole', 'user');
+    handleError(error, 'Registration failed');
+    throw error;
+  }
+};
+
+export const checkAuthStatus = async () => {
+  try {
+    const token = getAuthToken();
+    if (!token) return null;
+
+    const user = await getCurrentUser();
+    setUser(user);
+    return user;
+  } catch (error) {
+    clearAuth();
+    return null;
   }
 };

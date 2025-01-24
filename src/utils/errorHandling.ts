@@ -1,5 +1,6 @@
-import { PostgrestError } from '@supabase/supabase-js';
+import { AxiosError } from 'axios';
 import toast from 'react-hot-toast';
+import axios from 'axios';
 
 interface ErrorWithMessage {
   message: string;
@@ -7,8 +8,8 @@ interface ErrorWithMessage {
   details?: unknown;
 }
 
-export function isPostgrestError(error: unknown): error is PostgrestError {
-  return typeof error === 'object' && error !== null && 'code' in error;
+export function isAxiosError(error: unknown): error is AxiosError {
+  return error instanceof AxiosError;
 }
 
 export function getErrorMessage(error: unknown): string {
@@ -20,17 +21,8 @@ export function getErrorMessage(error: unknown): string {
     return error.message;
   }
 
-  if (isPostgrestError(error)) {
-    switch (error.code) {
-      case '23505':
-        return 'This record already exists.';
-      case '23503':
-        return 'This operation would violate database constraints.';
-      case 'invalid_credentials':
-        return 'Invalid email or password.';
-      default:
-        return error.message || 'An unexpected database error occurred.';
-    }
+  if (isAxiosError(error)) {
+    return error.response?.data?.message || error.message;
   }
 
   if (error && typeof error === 'object' && 'message' in error) {
@@ -40,8 +32,40 @@ export function getErrorMessage(error: unknown): string {
   return 'An unexpected error occurred.';
 }
 
-export function handleError(error: unknown, customMessage?: string): void {
-  const message = customMessage || getErrorMessage(error);
+export const handleError = (error: any, defaultMessage: string = 'Something went wrong') => {
   console.error('Error:', error);
+
+  let message = defaultMessage;
+
+  if (axios.isAxiosError(error)) {
+    // Handle Axios errors
+    if (error.response) {
+      // Server responded with error status
+      message = error.response.data.message || defaultMessage;
+    } else if (error.request) {
+      // Request was made but no response received
+      message = 'No response from server. Please try again.';
+    }
+  } else if (error instanceof Error) {
+    // Handle standard JavaScript errors
+    message = error.message;
+  }
+
+  // Show error toast notification
   toast.error(message);
-}
+};
+
+export const handleErrorAlternative = (error: unknown, defaultMessage: string = 'An error occurred') => {
+  if (error instanceof AxiosError) {
+    const message = error.response?.data?.message || error.message;
+    toast.error(message);
+    return;
+  }
+  
+  if (error instanceof Error) {
+    toast.error(error.message);
+    return;
+  }
+  
+  toast.error(defaultMessage);
+};

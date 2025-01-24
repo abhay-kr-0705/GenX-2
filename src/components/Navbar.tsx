@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { getUser } from '../utils/localStorage';
 import logo from './logo.png';
 
 const Navbar = () => {
@@ -12,13 +13,12 @@ const Navbar = () => {
 
   useEffect(() => {
     const checkAdmin = () => {
-      if (user) {
-        const userRole = localStorage.getItem('userRole');
-        const isAdminUser = userRole === 'admin' || userRole === 'superadmin';
+      const currentUser = user || getUser();
+      if (currentUser) {
+        const isAdminUser = currentUser.role === 'admin' || currentUser.role === 'superadmin';
         setIsAdmin(isAdminUser);
       } else {
         setIsAdmin(false);
-        localStorage.removeItem('userRole');
       }
     };
 

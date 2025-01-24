@@ -3,9 +3,10 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import heroImage from './hero1.jpg'; 
 import heroImage2 from './hero.jpg';
 import heroImage3 from './hero2.jpg';
+import heroImage4 from './herocopy2.jpg';
 
 const images = [
-  heroImage, 
+  heroImage4, 
   heroImage2,
   heroImage3
 ];
@@ -30,7 +31,7 @@ const ImageSlider = () => {
   };
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden">
+    <div className="relative h-[400px] w-full overflow-hidden">
       {images.map((image, index) => (
         <div
           key={index}
@@ -45,14 +46,14 @@ const ImageSlider = () => {
           />
         </div>
       ))}
-      
+
       <button
         onClick={goToPrevious}
         className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/50 p-2 rounded-full text-white"
       >
         <ChevronLeft />
       </button>
-      
+
       <button
         onClick={goToNext}
         className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/50 p-2 rounded-full text-white"

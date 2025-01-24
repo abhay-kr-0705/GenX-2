@@ -13,7 +13,7 @@ const UserProfile = () => {
     name: user?.name || '',
     registration_no: user?.registration_no || '',
     branch: user?.branch || '',
-    year: user?.year || '',
+    semester: user?.semester || '',
   });
   const navigate = useNavigate();
   
@@ -38,6 +38,7 @@ const UserProfile = () => {
   const handleSignOut = async () => {
     try {
       await signOut();
+      toast.success('Signed out successfully');
       navigate('/login');
     } catch (error) {
       console.error('Failed to sign out:', error);
@@ -119,19 +120,23 @@ const UserProfile = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">Year</label>
+                <label className="block text-sm font-medium text-gray-700">Semester</label>
                 <select
-                  name="year"
-                  value={formData.year}
-                  onChange={(e) => setFormData({ ...formData, year: e.target.value })}
+                  name="semester"
+                  value={formData.semester}
+                  onChange={(e) => setFormData({ ...formData, semester: e.target.value })}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                   disabled={submitting}
                 >
-                  <option value="">Select Year</option>
-                  <option value="1">1st Year</option>
-                  <option value="2">2nd Year</option>
-                  <option value="3">3rd Year</option>
-                  <option value="4">4th Year</option>
+                  <option value="">Select Semester</option>
+                  <option value="1">1st Semester</option>
+                  <option value="2">2nd Semester</option>
+                  <option value="3">3rd Semester</option>
+                  <option value="4">4th Semester</option>
+                  <option value="5">5th Semester</option>
+                  <option value="6">6th Semester</option>
+                  <option value="7">7th Semester</option>
+                  <option value="8">8th Semester</option>
                 </select>
               </div>
 
@@ -168,8 +173,8 @@ const UserProfile = () => {
                 <p className="mt-1 text-lg">{user?.branch}</p>
               </div>
               <div>
-                <h3 className="text-sm font-medium text-gray-500">Year</h3>
-                <p className="mt-1 text-lg">{user?.year}</p>
+                <h3 className="text-sm font-medium text-gray-500">Semester</h3>
+                <p className="mt-1 text-lg">{user?.semester}</p>
               </div>
               <div>
                 <h3 className="text-sm font-medium text-gray-500">Role</h3>

@@ -1,320 +1,181 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { supabase } from '../../lib/supabase';
-import { Plus, Edit, Trash2, Image } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { getGalleries, createGallery, updateGallery, deleteGallery } from '../../services/api';
+import { handleError } from '../../utils/errorHandling';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface Gallery {
   id: string;
   title: string;
   description: string;
-  event_id: string;
-  photo_count: number;
+  photos: Photo[];
+  created_at: string;
 }
 
-interface Event {
+interface Photo {
   id: string;
-  title: string;
+  url: string;
+  caption: string;
+  order: number;
 }
 
 const ManageGallery = () => {
+  const { user } = useAuth();
   const [galleries, setGalleries] = useState<Gallery[]>([]);
-  const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [showPhotoModal, setShowPhotoModal] = useState(false);
-  const [selectedGallery, setSelectedGallery] = useState<string | null>(null);
-  const [formData, setFormData] = useState({
+  const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
+  const [form, setForm] = useState({
     title: '',
-    description: '',
-    event_id: ''
+    description: ''
   });
-  const [photoData, setPhotoData] = useState({
-    url: '',
-    caption: ''
-  });
-  const navigate = useNavigate();
 
   useEffect(() => {
-    checkAdminAccess();
     fetchGalleries();
-    fetchEvents();
   }, []);
-
-  const checkAdminAccess = async () => {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', (await supabase.auth.getUser()).data.user?.id)
-      .single();
-
-    if (!profile || !['admin', 'superadmin'].includes(profile.role)) {
-      navigate('/');
-      toast.error('Unauthorized access');
-    }
-  };
 
   const fetchGalleries = async () => {
     try {
-      const { data, error } = await supabase
-        .from('event_galleries')
-        .select(`
-          *,
-          photo_count:gallery_photos(count)
-        `);
-
-      if (error) throw error;
-      setGalleries(data || []);
+      const data = await getGalleries();
+      setGalleries(data);
     } catch (error) {
-      console.error('Error fetching galleries:', error);
-      toast.error('Failed to load galleries');
+      handleError(error, 'Failed to fetch galleries');
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchEvents = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('events')
-        .select('id, title');
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedFiles?.length) {
+      handleError(new Error('Please select at least one photo'), 'No photos selected');
+      return;
+    }
 
-      if (error) throw error;
-      setEvents(data || []);
+    const formData = new FormData();
+    formData.append('title', form.title);
+    formData.append('description', form.description);
+    Array.from(selectedFiles).forEach((file, index) => {
+      formData.append('photos', file);
+    });
+
+    try {
+      await createGallery(formData);
+      await fetchGalleries();
+      setForm({ title: '', description: '' });
+      setSelectedFiles(null);
     } catch (error) {
-      console.error('Error fetching events:', error);
-      toast.error('Failed to load events');
+      handleError(error, 'Failed to create gallery');
     }
   };
 
-  const handleAddGallery = async () => {
-    try {
-      const { error } = await supabase
-        .from('event_galleries')
-        .insert([formData]);
-
-      if (error) throw error;
-      
-      toast.success('Gallery added successfully');
-      setShowAddModal(false);
-      setFormData({ title: '', description: '', event_id: '' });
-      fetchGalleries();
-    } catch (error) {
-      console.error('Error adding gallery:', error);
-      toast.error('Failed to add gallery');
-    }
-  };
-
-  const handleAddPhoto = async () => {
-    if (!selectedGallery) return;
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('Are you sure you want to delete this gallery?')) return;
 
     try {
-      const { error } = await supabase
-        .from('gallery_photos')
-        .insert([{
-          gallery_id: selectedGallery,
-          ...photoData
-        }]);
-
-      if (error) throw error;
-      
-      toast.success('Photo added successfully');
-      setShowPhotoModal(false);
-      setPhotoData({ url: '', caption: '' });
-      fetchGalleries();
+      await deleteGallery(id);
+      await fetchGalleries();
     } catch (error) {
-      console.error('Error adding photo:', error);
-      toast.error('Failed to add photo');
-    }
-  };
-
-  const handleDeleteGallery = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this gallery?')) return;
-
-    try {
-      const { error } = await supabase
-        .from('event_galleries')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-      
-      toast.success('Gallery deleted successfully');
-      fetchGalleries();
-    } catch (error) {
-      console.error('Error deleting gallery:', error);
-      toast.error('Failed to delete gallery');
+      handleError(error, 'Failed to delete gallery');
     }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-gray-600">Loading...</div>
+      <div className="min-h-screen bg-gray-100 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">Loading galleries...</div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Manage Gallery</h1>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center"
-          >
-            <Plus className="w-5 h-5 mr-2" />
-            Add Gallery
-          </button>
+    <div className="min-h-screen bg-gray-100 py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <h2 className="text-2xl font-bold mb-4">Add New Gallery</h2>
+          
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label htmlFor="title" className="block text-sm font-medium text-gray-700">
+                Title
+              </label>
+              <input
+                type="text"
+                id="title"
+                value={form.title}
+                onChange={e => setForm({ ...form, title: e.target.value })}
+                required
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+                Description
+              </label>
+              <input
+                type="text"
+                id="description"
+                value={form.description}
+                onChange={e => setForm({ ...form, description: e.target.value })}
+                required
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="photos" className="block text-sm font-medium text-gray-700">
+                Photos
+              </label>
+              <input
+                type="file"
+                id="photos"
+                multiple
+                accept="image/*"
+                onChange={e => setSelectedFiles(e.target.files)}
+                required
+                className="mt-1 block w-full"
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              Create Gallery
+            </button>
+          </form>
         </div>
 
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Gallery
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Photos
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {galleries.map((gallery) => (
-                <tr key={gallery.id}>
-                  <td className="px-6 py-4">
-                    <div className="text-sm font-medium text-gray-900">{gallery.title}</div>
-                    <div className="text-sm text-gray-500">{gallery.description}</div>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-500">
-                    {gallery.photo_count} photos
-                  </td>
-                  <td className="px-6 py-4 text-right text-sm font-medium">
-                    <button
-                      onClick={() => {
-                        setSelectedGallery(gallery.id);
-                        setShowPhotoModal(true);
-                      }}
-                      className="text-blue-600 hover:text-blue-900 mr-4"
-                    >
-                      <Image className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteGallery(gallery.id)}
-                      className="text-red-600 hover:text-red-900"
-                    >
-                      <Trash2 className="w-5 h-5" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {galleries.map((gallery) => (
+            <div key={gallery.id} className="bg-white rounded-lg shadow-md overflow-hidden">
+              {gallery.photos[0] && (
+                <img
+                  src={gallery.photos[0].url}
+                  alt={gallery.title}
+                  className="w-full h-48 object-cover"
+                />
+              )}
+              <div className="p-4">
+                <h3 className="text-xl font-semibold mb-2">{gallery.title}</h3>
+                <p className="text-gray-600 mb-4">{gallery.description}</p>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-500">
+                    {new Date(gallery.created_at).toLocaleDateString()}
+                  </span>
+                  <button
+                    onClick={() => handleDelete(gallery.id)}
+                    className="text-red-600 hover:text-red-900"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
-
-      {/* Add Gallery Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
-            <h2 className="text-xl font-semibold mb-4">Add New Gallery</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Event</label>
-                <select
-                  value={formData.event_id}
-                  onChange={(e) => setFormData({ ...formData, event_id: e.target.value })}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                >
-                  <option value="">Select Event</option>
-                  {events.map((event) => (
-                    <option key={event.id} value={event.id}>{event.title}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Title</label>
-                <input
-                  type="text"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Description</label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                />
-              </div>
-              <div className="flex justify-end space-x-4">
-                <button
-                  onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2 text-gray-700 hover:text-gray-900"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleAddGallery}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                >
-                  Add Gallery
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Add Photo Modal */}
-      {showPhotoModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
-            <h2 className="text-xl font-semibold mb-4">Add New Photo</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Photo URL</label>
-                <input
-                  type="text"
-                  value={photoData.url}
-                  onChange={(e) => setPhotoData({ ...photoData, url: e.target.value })}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Caption</label>
-                <input
-                  type="text"
-                  value={photoData.caption}
-                  onChange={(e) => setPhotoData({ ...photoData, caption: e.target.value })}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                />
-              </div>
-              <div className="flex justify-end space-x-4">
-                <button
-                  onClick={() => setShowPhotoModal(false)}
-                  className="px-4 py-2 text-gray-700 hover:text-gray-900"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleAddPhoto}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                >
-                  Add Photo
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

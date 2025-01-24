@@ -5,7 +5,8 @@ export interface User {
   name: string;
   registration_no: string;
   branch: string;
-  year: string;
+  year: number;
+  mobile: string;
   created_at: string;
   updated_at: string;
 }
@@ -27,6 +28,15 @@ export interface EventRegistration {
 }
 
 export interface EventDetails {
+  agenda?: string[];
+  prerequisites?: string[];
+  requirements?: string[];
+  benefits?: string[];
+  speakers?: {
+    name: string;
+    bio: string;
+    image?: string;
+  }[];
   id: string;
   full_description: string;
   winners: Array<{
@@ -53,5 +63,37 @@ export interface Event {
   registration_deadline?: string;
   created_at: string;
   updated_at: string;
+  created_by: string;
   details?: EventDetails;
+}
+
+export interface Gallery {
+  id: string;
+  title: string;
+  description: string;
+  cover_image: string;
+  photos: Photo[];
+  created_at: string;
+  updated_at: string;
+  created_by: string;
+}
+
+export interface Photo {
+  id: string;
+  gallery_id: string;
+  url: string;
+  caption?: string;
+  order: number;
+  created_at: string;
+}
+
+export interface Resource {
+  id: string;
+  title: string;
+  description: string;
+  url: string;
+  type: 'document' | 'video' | 'link';
+  created_at: string;
+  updated_at: string;
+  created_by: string;
 }

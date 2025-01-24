@@ -23,6 +23,7 @@ const UserList = () => {
                 <th className="py-2 px-4 border-b border-gray-200">Name</th>
                 <th className="py-2 px-4 border-b border-gray-200">Email</th>
                 <th className="py-2 px-4 border-b border-gray-200">Registration No</th>
+                <th className="py-2 px-4 border-b border-gray-200">Mobile</th>
                 <th className="py-2 px-4 border-b border-gray-200">Branch</th>
                 <th className="py-2 px-4 border-b border-gray-200">Year</th>
                 <th className="py-2 px-4 border-b border-gray-200">Role</th>
@@ -34,6 +35,7 @@ const UserList = () => {
                   <td className="py-2 px-4 border-b border-gray-200">{user.name}</td>
                   <td className="py-2 px-4 border-b border-gray-200">{user.email}</td>
                   <td className="py-2 px-4 border-b border-gray-200">{user.registration_no}</td>
+                  <td className="py-2 px-4 border-b border-gray-200">{user.mobile}</td>
                   <td className="py-2 px-4 border-b border-gray-200">{user.branch}</td>
                   <td className="py-2 px-4 border-b border-gray-200">{user.year}</td>
                   <td className="py-2 px-4 border-b border-gray-200 capitalize">{user.role}</td>

@@ -1,36 +1,36 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
-import { useAuth } from '../contexts/AuthContext';
-import { handleError } from '../utils/errorHandling';
+import { getCurrentUser } from '../services/api';
 import { User } from '../types';
+import { useAuth } from '../contexts/AuthContext';
 
 export function useProfile() {
-  const { user } = useAuth();
+  const { user: authUser } = useAuth();
   const [profile, setProfile] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    if (user?.id) {
+    if (authUser) {
       fetchProfile();
     }
-  }, [user?.id]);
+  }, [authUser]);
 
   const fetchProfile = async () => {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user?.id)
-        .single();
-
-      if (error) throw error;
+      setLoading(true);
+      const data = await getCurrentUser();
       setProfile(data);
-    } catch (error) {
-      handleError(error, 'Error fetching profile');
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to fetch profile'));
     } finally {
       setLoading(false);
     }
   };
 
-  return { profile, loading, refetchProfile: fetchProfile };
+  return {
+    profile,
+    loading,
+    error,
+    refetch: fetchProfile
+  };
 }
