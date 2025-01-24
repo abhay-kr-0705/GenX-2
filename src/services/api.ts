@@ -8,11 +8,11 @@ console.log('API URL:', API_URL); // Log the API URL being used
 // Create axios instance with default config
 const api = axios.create({
   baseURL: API_URL,
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json'
-  },
-  withCredentials: true
+  }
 });
 
 // Add request interceptor to add auth token
@@ -54,6 +54,8 @@ api.interceptors.response.use(
       toast.error('Server error. Please try again later.');
     }
 
+    const errorMessage = error.response?.data?.message || error.message || 'An error occurred';
+    toast.error(errorMessage);
     return Promise.reject(error);
   }
 );
