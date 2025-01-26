@@ -5,6 +5,12 @@ import { useAuth } from '../contexts/AuthContext';
 import { getUser } from '../utils/localStorage';
 import logo from './logo.png';
 
+interface User {
+  name: string;
+  email: string;
+  isAdmin: boolean;
+}
+
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -40,6 +46,17 @@ const Navbar = () => {
     return `${baseClasses} ${isActivePath(path) ? activeClasses : inactiveClasses}`;
   };
 
+  const links = [
+    { id: 1, link: '/', text: 'Home' },
+    { id: 2, link: '/about', text: 'About' },
+    { id: 3, link: '/events', text: 'Events' },
+    { id: 4, link: '/team', text: 'Team' },
+    { id: 5, link: '/gallery', text: 'Gallery' },
+    { id: 6, link: '/resources', text: 'Resources' },
+    { id: 7, link: '/contact', text: 'Contact' },
+    ...(isAdmin ? [{ id: 8, link: '/admin', text: 'Admin' }] : []),
+  ];
+
   return (
     <nav className="fixed top-0 left-0 right-0 bg-white shadow-md z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -53,16 +70,9 @@ const Navbar = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex md:items-center md:space-x-4">
-            <Link to="/" className={getLinkClasses('/')}>Home</Link>
-            <Link to="/about" className={getLinkClasses('/about')}>About</Link>
-            <Link to="/events" className={getLinkClasses('/events')}>Events</Link>
-            <Link to="/team" className={getLinkClasses('/team')}>Team</Link>
-            <Link to="/gallery" className={getLinkClasses('/gallery')}>Gallery</Link>
-            <Link to="/resources" className={getLinkClasses('/resources')}>Resources</Link>
-            <Link to="/contact" className={getLinkClasses('/contact')}>Contact</Link>
-            {isAdmin && (
-              <Link to="/admin" className={getLinkClasses('/admin')}>Admin</Link>
-            )}
+            {links.map(({ id, link, text }) => (
+              <Link key={id} to={link} className={getLinkClasses(link)}>{text}</Link>
+            ))}
             {user ? (
               <Link to="/profile" className={getLinkClasses('/profile')}>Profile</Link>
             ) : (
@@ -91,64 +101,16 @@ const Navbar = () => {
       {isOpen && (
         <div className="md:hidden bg-white border-t">
           <div className="flex flex-col space-y-2 px-4 pt-2 pb-4">
-            <Link 
-              to="/" 
-              className={`block ${getLinkClasses('/')}`}
-              onClick={() => setIsOpen(false)}
-            >
-              Home
-            </Link>
-            <Link 
-              to="/about" 
-              className={`block ${getLinkClasses('/about')}`}
-              onClick={() => setIsOpen(false)}
-            >
-              About
-            </Link>
-            <Link 
-              to="/events" 
-              className={`block ${getLinkClasses('/events')}`}
-              onClick={() => setIsOpen(false)}
-            >
-              Events
-            </Link>
-            <Link 
-              to="/team" 
-              className={`block ${getLinkClasses('/team')}`}
-              onClick={() => setIsOpen(false)}
-            >
-              Team
-            </Link>
-            <Link 
-              to="/gallery" 
-              className={`block ${getLinkClasses('/gallery')}`}
-              onClick={() => setIsOpen(false)}
-            >
-              Gallery
-            </Link>
-            <Link 
-              to="/resources" 
-              className={`block ${getLinkClasses('/resources')}`}
-              onClick={() => setIsOpen(false)}
-            >
-              Resources
-            </Link>
-            <Link 
-              to="/contact" 
-              className={`block ${getLinkClasses('/contact')}`}
-              onClick={() => setIsOpen(false)}
-            >
-              Contact
-            </Link>
-            {isAdmin && (
+            {links.map(({ id, link, text }) => (
               <Link 
-                to="/admin" 
-                className={`block ${getLinkClasses('/admin')}`}
+                key={id} 
+                to={link} 
+                className={`block ${getLinkClasses(link)}`}
                 onClick={() => setIsOpen(false)}
               >
-                Admin
+                {text}
               </Link>
-            )}
+            ))}
             {user ? (
               <Link 
                 to="/profile" 

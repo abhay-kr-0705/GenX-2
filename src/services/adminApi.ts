@@ -121,3 +121,13 @@ export const deleteEvent = async (eventId: string): Promise<ApiResponse<void>> =
     throw error;
   }
 };
+
+export const updateEventSimple = async (eventId: string, eventData: any) => {
+  try {
+    const response = await api.put(`/admin/events/${eventId}`, eventData);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating event:', error);
+    throw error;
+  }
+};
