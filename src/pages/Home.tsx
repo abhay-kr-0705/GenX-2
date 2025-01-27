@@ -1,42 +1,126 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { getEvents } from '../services/api';
+import api from '../services/api';
 import { Event } from '../types';
 import ImageScroller from '../components/ImageScroller';
 import { handleError } from '../utils/errorHandling';
+import { toast } from 'react-hot-toast';
+import hero from '../components/hero.jpg';
 import hero1 from '../components/hero1.jpg';
 import hero2 from '../components/hero2.jpg';
-import hero from '../components/hero.jpg';
 import mobile1 from '../components/1.png';
 import mobile2 from '../components/2.png';
 import mobile3 from '../components/3.png';
 
 const Home = () => {
   const { user } = useAuth();
-  const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
+  const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchUpcomingEvents();
+    fetchEvents();
   }, []);
 
-  const fetchUpcomingEvents = async () => {
+  const fetchEvents = async () => {
     try {
-      setLoading(true);
-      const events = await getEvents();
-      const now = new Date();
-      const upcoming = events
-        .filter(event => new Date(event.start_date) > now)
-        .slice(0, 3); // Get only the next 3 upcoming events
-      setUpcomingEvents(upcoming);
-    } catch (error) {
-      handleError(error, 'Failed to fetch upcoming events');
-      setUpcomingEvents([]); // Set empty array on error
-    } finally {
+      const response = await api.get('/events');
+      if (response.data) {
+        setEvents(response.data);
+      }
       setLoading(false);
+    } catch (error: any) {
+      console.error('Error fetching events:', error?.response?.data || error.message);
+      setLoading(false);
+      toast.error('Failed to load events. Please try again later.');
     }
   };
+
+  const upcomingEvents = events
+    .filter(event => new Date(event.date) > new Date())
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+  const getShortDescription = (description: string) => {
+    const firstParagraph = description.split('\n')[0];
+    return firstParagraph.length > 150 ? firstParagraph.substring(0, 150) + '...' : firstParagraph;
+  };
+
+  const renderEvents = () => (
+    <section className="py-16 bg-gradient-to-br from-blue-50 via-purple-50 to-indigo-50">
+      <div className="container mx-auto px-4">
+        <div className="text-center mb-12">
+          <h2 className="text-4xl font-bold mb-4">
+            <span className="bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text">
+              Upcoming Events
+            </span>
+          </h2>
+          <p className="text-gray-600 max-w-2xl mx-auto">
+            Join us in our upcoming events and be part of the tech revolution.
+          </p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {upcomingEvents.map((event, index) => (
+            <div key={event._id || index} className="bg-white rounded-2xl shadow-lg overflow-hidden transform transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+                    {new Date(event.date).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </span>
+                  <span className="text-sm text-gray-500"> 📍 {event.venue || event.location}</span>
+                </div>
+                <h3 className="text-xl font-bold mb-2 text-blue-600">{event.title}</h3>
+                <p className="text-gray-600 mb-4">{getShortDescription(event.description)}</p>
+                <div className="flex justify-between items-center text-sm text-gray-500">
+                  <span>⏰ {event.time}</span>
+                </div>
+                <div className="mt-4 flex gap-2">
+                  <Link
+                    to="/events"
+                    className="inline-block w-full text-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    View Details
+                  </Link>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        {upcomingEvents.length === 0 && (
+          <div className="text-center text-gray-600">
+            <p>No upcoming events at the moment. Check back soon!</p>
+          </div>
+        )}
+        <div className="text-center mt-12">
+          <Link
+            to="/events"
+            className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-bold text-white transition-all duration-200 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600"
+          >
+            <span className="relative">
+              View All Events
+              <span className="absolute bottom-0 left-0 w-full h-0.5 bg-white transform scale-x-0 transition-transform group-hover:scale-x-100"></span>
+            </span>
+            <svg 
+              className="w-5 h-5 ml-2 transform transition-transform group-hover:translate-x-1" 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                strokeWidth={2} 
+                d="M13 7l5 5m0 0l-5 5m5-5H6"
+              />
+            </svg>
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
 
   const images = [
     { 
@@ -120,86 +204,7 @@ const Home = () => {
       </section>
 
       {/* Upcoming Events Section */}
-      <section className="py-20 bg-gradient-to-br from-blue-50 via-purple-50 to-indigo-50">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold mb-4">
-              <span className="bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text">
-                Upcoming Events
-              </span>
-            </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Don't miss out on our exciting upcoming events! Join us to learn, grow, and connect with fellow enthusiasts.
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-            <div className="bg-white rounded-2xl shadow-lg overflow-hidden transform transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
-                    Feb 4-7, 2025
-                  </span>
-                  <span className="text-sm text-gray-500">📍 Shershah Engineering College</span>
-                </div>
-                <h3 className="text-xl font-bold mb-2 text-blue-600">4-Day Web Development Bootcamp</h3>
-                <p className="text-gray-600 mb-4">
-                  Master web development with hands-on experience in HTML, CSS, JavaScript, React.js, Node.js, and MongoDB.
-                </p>
-                <div className="flex items-center justify-between">
-                  <div className="text-sm text-gray-500">
-                    <span className="font-medium">Duration:</span> 4 Days
-                  </div>
-                  <a href="/events" className="inline-flex items-center text-blue-600 hover:text-blue-700">
-                    Learn More
-                    <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </a>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl shadow-lg overflow-hidden transform transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
-                    Feb 4-7, 2025
-                  </span>
-                  <span className="text-sm text-gray-500">📍 Shershah Engineering College</span>
-                </div>
-                <h3 className="text-xl font-bold mb-2 text-blue-600">Introduction to Robotics and IoT Workshop</h3>
-                <p className="text-gray-600 mb-4">
-                  Explore robotics and IoT with hands-on projects using Arduino, ESP32, and various sensors.
-                </p>
-                <div className="flex items-center justify-between">
-                  <div className="text-sm text-gray-500">
-                    <span className="font-medium">Duration:</span> 4 Days
-                  </div>
-                  <a href="/events" className="inline-flex items-center text-blue-600 hover:text-blue-700">
-                    Learn More
-                    <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="text-center mt-12">
-            <a
-              href="/events"
-              className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              <span>View All Events</span>
-              <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-              </svg>
-            </a>
-          </div>
-        </div>
-      </section>
+      {renderEvents()}
 
       {/* What We Offer Section */}
       <section className="py-16 bg-white">

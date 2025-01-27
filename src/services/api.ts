@@ -1,20 +1,17 @@
-import axios, { AxiosError } from 'axios';
+import axios from 'axios';
 import { toast } from 'react-hot-toast';
 
-const API_URL = 'https://genx-backend-rdzx.onrender.com/api';
+const API_URL = process.env.REACT_APP_API_URL || 'https://genx-backend-rdzx.onrender.com/api';
 
-console.log('API URL:', API_URL); // Log the API URL being used
-
-// Create axios instance with default config
 const api = axios.create({
   baseURL: API_URL,
-  withCredentials: true,
   headers: {
-    'Content-Type': 'application/json'
-  }
+    'Content-Type': 'application/json',
+  },
+  withCredentials: true
 });
 
-// Add request interceptor to add auth token
+// Request interceptor
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -24,37 +21,53 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
-    console.error('Request interceptor error:', error);
+    console.error('Request error:', error);
     return Promise.reject(error);
   }
 );
 
-// Add response interceptor for error handling
+// Response interceptor
 api.interceptors.response.use(
   (response) => response,
-  (error: AxiosError) => {
-    console.error('API Error:', error);
+  async (error) => {
+    const originalRequest = error.config;
 
-    // Handle authentication errors
-    if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
-      toast.error('Session expired. Please login again.');
+    // Handle network errors
+    if (!error.response) {
+      toast.error('Network error. Please check your connection.');
+      return Promise.reject(error);
     }
 
-    // Handle forbidden errors
-    if (error.response?.status === 403) {
-      toast.error('You do not have permission to perform this action');
+    // Handle token expiration
+    if (error.response.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      try {
+        const refreshToken = localStorage.getItem('refreshToken');
+        if (!refreshToken) {
+          throw new Error('No refresh token');
+        }
+
+        const response = await axios.post(`${API_URL}/auth/refresh-token`, {
+          refreshToken
+        });
+
+        const { token } = response.data;
+        localStorage.setItem('token', token);
+        originalRequest.headers.Authorization = `Bearer ${token}`;
+        return api(originalRequest);
+      } catch (refreshError) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
+        window.location.href = '/login';
+        return Promise.reject(refreshError);
+      }
     }
 
-    // Handle server errors
-    if (error.response?.status === 500) {
-      toast.error('Server error. Please try again later.');
+    // Handle other errors
+    const errorMessage = error.response?.data?.message || 'An error occurred';
+    if (error.response.status !== 401) {
+      toast.error(errorMessage);
     }
-
-    const errorMessage = error.response?.data?.message || error.message || 'An error occurred';
-    toast.error(errorMessage);
     return Promise.reject(error);
   }
 );
@@ -326,5 +339,4 @@ export const deleteResource = async (id: string) => {
   }
 };
 
-// Export other API functions
 export default api;
