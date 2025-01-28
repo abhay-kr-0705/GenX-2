@@ -1,5 +1,5 @@
 import React from 'react';
-import { createBrowserRouter, RouterProvider, Routes, Route, Navigate } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom';
 import { Suspense, lazy } from 'react';
 import Navbar from './components/Navbar';
 import LoadingSpinner from './components/LoadingSpinner';
@@ -28,111 +28,156 @@ const ManageGallery = lazy(() => import('./pages/admin/ManageGallery'));
 const ManageResources = lazy(() => import('./pages/admin/ManageResources'));
 const UserList = lazy(() => import('./pages/admin/UserList'));
 
+// Root layout component
+const RootLayout = () => {
+  return (
+    <AuthProvider>
+      <Navbar />
+      <Suspense fallback={<LoadingSpinner />}>
+        <Outlet />
+      </Suspense>
+      <Footer />
+      <Toaster position="top-right" />
+    </AuthProvider>
+  );
+};
+
 const router = createBrowserRouter([
   {
     path: '/',
-    element: (
-      <AuthProvider>
-        <Navbar />
-        <Suspense fallback={<LoadingSpinner />}>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/events" element={<Events />} />
-            <Route 
-              path="/events/:eventId/register" 
-              element={
-                <ProtectedRoute>
-                  <EventRegistration />
-                </ProtectedRoute>
-              } 
-            />
-            <Route path="/team" element={<Team />} />
-            <Route 
-              path="/gallery" 
-              element={
-                <ProtectedRoute>
-                  <Gallery />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/gallery/:galleryId" 
-              element={
-                <ProtectedRoute>
-                  <GalleryView />
-                </ProtectedRoute>
-              } 
-            />
-            <Route path="/contact" element={<Contact />} />
-            <Route 
-              path="/resources" 
-              element={
-                <ProtectedRoute>
-                  <Resources />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/login" 
-              element={
-                <ProtectedRoute requireAuth={false}>
-                  <Login />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/signup" 
-              element={
-                <ProtectedRoute requireAuth={false}>
-                  <Signup />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/profile" 
-              element={
-                <ProtectedRoute>
-                  <UserProfile />
-                </ProtectedRoute>
-              } 
-            />
-            
-            {/* Admin routes */}
-            <Route 
-              path="/admin/*" 
-              element={
-                <ProtectedRoute requireAuth requireAdmin>
-                  <Routes>
-                    <Route path="/" element={<Dashboard />} />
-                    <Route path="events" element={<ManageEvents />} />
-                    <Route path="events/:eventId" element={<EventDetails />} />
-                    <Route path="gallery" element={<ManageGallery />} />
-                    <Route path="resources" element={<ManageResources />} />
-                    <Route path="users" element={<UserList />} />
-                  </Routes>
-                </ProtectedRoute>
-              } 
-            />
-            
-            {/* Catch all route */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </Suspense>
-        <Footer />
-        <Toaster position="top-right" />
-      </AuthProvider>
-    ),
+    element: <RootLayout />,
+    children: [
+      {
+        path: '/',
+        element: <Home />
+      },
+      {
+        path: '/about',
+        element: <About />
+      },
+      {
+        path: '/events',
+        element: <Events />
+      },
+      {
+        path: '/events/:eventId/register',
+        element: (
+          <ProtectedRoute>
+            <EventRegistration />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: '/team',
+        element: <Team />
+      },
+      {
+        path: '/gallery',
+        element: (
+          <ProtectedRoute>
+            <Gallery />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: '/gallery/:galleryId',
+        element: (
+          <ProtectedRoute>
+            <GalleryView />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: '/contact',
+        element: <Contact />
+      },
+      {
+        path: '/resources',
+        element: (
+          <ProtectedRoute>
+            <Resources />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: '/login',
+        element: (
+          <ProtectedRoute requireAuth={false}>
+            <Login />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: '/signup',
+        element: (
+          <ProtectedRoute requireAuth={false}>
+            <Signup />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: '/profile',
+        element: (
+          <ProtectedRoute>
+            <UserProfile />
+          </ProtectedRoute>
+        )
+      },
+      // Admin routes
+      {
+        path: '/admin',
+        element: (
+          <ProtectedRoute requireAdmin>
+            <Dashboard />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: '/admin/events',
+        element: (
+          <ProtectedRoute requireAdmin>
+            <ManageEvents />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: '/admin/events/:eventId',
+        element: (
+          <ProtectedRoute requireAdmin>
+            <EventDetails />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: '/admin/gallery',
+        element: (
+          <ProtectedRoute requireAdmin>
+            <ManageGallery />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: '/admin/resources',
+        element: (
+          <ProtectedRoute requireAdmin>
+            <ManageResources />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: '/admin/users',
+        element: (
+          <ProtectedRoute requireAdmin>
+            <UserList />
+          </ProtectedRoute>
+        )
+      }
+    ]
   }
-], {
-  future: {
-    v7_startTransition: true,
-    v7_relativeSplatPath: true
-  }
-});
+]);
 
-function App() {
+const App = () => {
   return <RouterProvider router={router} />;
-}
+};
 
 export default App;
