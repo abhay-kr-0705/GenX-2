@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getEvents, createEvent, updateEvent, deleteEvent } from '../../services/api';
+import { getEvents, createEvent, updateEvent, deleteEvent, getEventRegistrations } from '../../services/api';
 import { handleError } from '../../utils/errorHandling';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -14,6 +14,33 @@ interface Event {
   created_at: string;
 }
 
+interface Registration {
+  id: string;
+  name: string;
+  email: string;
+  registration_no: string;
+  mobile_no: string;
+  semester: string;
+  status: string;
+  created_at: string;
+}
+
+// Function to format date for input field (YYYY-MM-DD)
+const formatDateForInput = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toISOString().split('T')[0];
+};
+
+// Function to format date to dd/mm/yy
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: '2-digit',
+    year: '2-digit'
+  });
+};
+
 const ManageEvents = () => {
   const { user } = useAuth();
   const [events, setEvents] = useState<Event[]>([]);
@@ -22,11 +49,15 @@ const ManageEvents = () => {
   const [form, setForm] = useState({
     title: '',
     description: '',
-    date: '',
-    end_date: '',
+    date: formatDateForInput(new Date().toISOString()),
+    end_date: formatDateForInput(new Date().toISOString()),
     venue: '',
     type: 'upcoming' as const
   });
+  const [showRegistrations, setShowRegistrations] = useState(false);
+  const [selectedEventRegistrations, setSelectedEventRegistrations] = useState<Registration[]>([]);
+  const [loadingRegistrations, setLoadingRegistrations] = useState(false);
+  const [selectedEventTitle, setSelectedEventTitle] = useState('');
 
   useEffect(() => {
     fetchEvents();
@@ -46,10 +77,16 @@ const ManageEvents = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const eventData = {
+        ...form,
+        date: form.date,
+        end_date: form.end_date
+      };
+
       if (editingEvent) {
-        await updateEvent(editingEvent.id, form);
+        await updateEvent(editingEvent.id, eventData);
       } else {
-        await createEvent(form);
+        await createEvent(eventData);
       }
       await fetchEvents();
       resetForm();
@@ -63,8 +100,8 @@ const ManageEvents = () => {
     setForm({
       title: event.title,
       description: event.description,
-      date: event.date.split('T')[0],
-      end_date: event.end_date.split('T')[0],
+      date: formatDateForInput(event.date),
+      end_date: formatDateForInput(event.end_date),
       venue: event.venue,
       type: event.type
     });
@@ -85,11 +122,28 @@ const ManageEvents = () => {
     setForm({
       title: '',
       description: '',
-      date: '',
-      end_date: '',
+      date: formatDateForInput(new Date().toISOString()),
+      end_date: formatDateForInput(new Date().toISOString()),
       venue: '',
       type: 'upcoming'
     });
+  };
+
+  const handleViewRegistrations = async (event: Event) => {
+    setLoadingRegistrations(true);
+    setSelectedEventTitle(event.title);
+    setShowRegistrations(true);
+    
+    try {
+      const registrations = await getEventRegistrations(event.id);
+      setSelectedEventRegistrations(registrations);
+    } catch (error) {
+      console.error('Error fetching event registrations:', error);
+      setSelectedEventRegistrations([]);
+      handleError(error, 'Failed to fetch registrations. Please try again later.');
+    } finally {
+      setLoadingRegistrations(false);
+    }
   };
 
   if (loading) {
@@ -196,51 +250,138 @@ const ManageEvents = () => {
         </div>
 
         {/* Events List */}
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Venue</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {events.map((event) => (
-                <tr key={event.id}>
-                  <td className="px-6 py-4 whitespace-nowrap">{event.title}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {new Date(event.date).toLocaleDateString()} - {new Date(event.end_date).toLocaleDateString()}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">{event.venue}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      event.type === 'upcoming' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      {event.type}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <button
-                      onClick={() => handleEdit(event)}
-                      className="text-blue-600 hover:text-blue-800 mr-4"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(event.id)}
-                      className="text-red-600 hover:text-red-800"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="mt-8">
+          <div className="overflow-x-auto">
+            <div className="inline-block min-w-full align-middle">
+              <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg">
+                <table className="min-w-full divide-y divide-gray-300">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">
+                        Title
+                      </th>
+                      <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                        Date
+                      </th>
+                      <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                        Venue
+                      </th>
+                      <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                        Type
+                      </th>
+                      <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                        Registrations
+                      </th>
+                      <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-6">
+                        <span className="sr-only">Actions</span>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200 bg-white">
+                    {events
+                      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                      .map((event) => (
+                        <tr key={event.id}>
+                          <td className="px-6 py-4 whitespace-nowrap">{event.title}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {formatDate(event.date)} - {formatDate(event.end_date)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">{event.venue}</td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              event.type === 'upcoming' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                            }`}>
+                              {event.type}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <button
+                              onClick={() => handleViewRegistrations(event)}
+                              className="text-indigo-600 hover:text-indigo-800"
+                            >
+                              View Registered Members
+                            </button>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <button
+                              onClick={() => handleEdit(event)}
+                              className="text-blue-600 hover:text-blue-800 mr-4"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDelete(event.id)}
+                              className="text-red-600 hover:text-red-800"
+                            >
+                              Delete
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
         </div>
+
+        {/* Registrations Modal */}
+        {showRegistrations && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg max-w-4xl w-full p-6 max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-semibold text-gray-900">
+                  Registered Members - {selectedEventTitle}
+                </h3>
+                <button
+                  onClick={() => setShowRegistrations(false)}
+                  className="text-gray-400 hover:text-gray-500"
+                >
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {loadingRegistrations ? (
+                <div className="flex justify-center items-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-600"></div>
+                </div>
+              ) : selectedEventRegistrations.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  No registrations found for this event.
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-300">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Name</th>
+                        <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Email</th>
+                        <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Registration No.</th>
+                        <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Mobile No.</th>
+                        <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Semester</th>
+                        <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Registration Date</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200 bg-white">
+                      {selectedEventRegistrations.map((registration) => (
+                        <tr key={registration.id}>
+                          <td className="px-3 py-4 text-sm text-gray-900">{registration.name}</td>
+                          <td className="px-3 py-4 text-sm text-gray-500">{registration.email}</td>
+                          <td className="px-3 py-4 text-sm text-gray-500">{registration.registration_no}</td>
+                          <td className="px-3 py-4 text-sm text-gray-500">{registration.mobile_no}</td>
+                          <td className="px-3 py-4 text-sm text-gray-500">{registration.semester}</td>
+                          <td className="px-3 py-4 text-sm text-gray-500">{formatDate(registration.created_at)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

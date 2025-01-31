@@ -3,17 +3,15 @@ import { Instagram, Linkedin, Mail } from 'lucide-react';
 import { FaLinkedin, FaGithub, FaEnvelope } from 'react-icons/fa';
 import Abhay from './Abhay.png';
 import Prakhar from './prakhar.jpg';
-import Ankit from './Ankit.jpg';
+import Ankita from './Ankita.jpg';
 import Anjali from './Anjali.jpg';
 import Braj from './Braj.jpg';
 import Devika from './devika.jpg';
 import Rakhee from './Rakhee.jpg';
 import Saurabh from './Saurabh.jpg';
 import blank from './blank.jpg';
-import VikashR from './Vikash.jpg';
 import Abhishek from './Abhishek.jpg';
 import AbhishekK from './AbhishekBhaiya.jpg';
-import AbhishekJ from './Abhishek_J.jpg';
 import Abhiraj from './Abhiraj.jpg';
 import AbhishekKumarJha from './33 - Abhisekh kumar jha..jpg';
 import AnkitUpadhyay from './Ankit.jpg';
@@ -121,8 +119,8 @@ const domainLeads: TeamMember[] = [
     name: 'Abhishek Jha',
     role: 'Cybersecurity Lead',
     image: AbhishekKumarJha,
-    instagram: 'https://instagram.com/a..0bhishek.j',
-    linkedin: 'https://linkedin.com/in/abh.......0ishek.j'
+    instagram: 'https://www.instagram.com/abhisekhkumar__?igsh=ODJmOWx6MXV3cTc4',
+    linkedin: 'https://www.linkedin.com/in/abhisekh-kumar-jha-816407329?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app'
   },
   {
     id: 12,
@@ -187,9 +185,9 @@ const domainCoLeads: TeamMember[] = [
   
   {
     id: 19,
-    name: '.............',
+    name: 'Ankita kumari',
     role: 'Web Development Co-Lead',
-    image: blank,
+    image: Ankita,
     instagram: 'https://instagram.com/....',
     linkedin: 'https://linkedin.com/in/....'
   },

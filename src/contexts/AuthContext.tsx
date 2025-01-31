@@ -80,10 +80,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const handleUpdateProfile = async (data: Partial<User>) => {
     try {
-      // TODO: Implement profile update API call
-      setUserState(prev => prev ? { ...prev, ...data } : null);
-      const updatedUser = user ? { ...user, ...data } : null;
-      if (updatedUser) setUser(updatedUser);
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/users/profile`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${getAuthToken()}`
+        },
+        body: JSON.stringify(data)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update profile');
+      }
+
+      const updatedUserData = await response.json();
+      setUserState(updatedUserData);
+      setUser(updatedUserData);
+      
+      // Refresh user data from server
+      const refreshedUser = await getCurrentUser();
+      setUserState(refreshedUser);
+      setUser(refreshedUser);
     } catch (error) {
       handleError(error, 'Profile update failed');
       throw error;

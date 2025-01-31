@@ -2,10 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { getGalleries, createGallery, updateGallery, deleteGallery } from '../../services/api';
 import { handleError } from '../../utils/errorHandling';
 import { useAuth } from '../../contexts/AuthContext';
+import { Button, Input, Card, Image, Modal, message } from 'antd';
+import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
+import { uploadImage } from '../../services/api';
 
 interface Gallery {
   id: string;
   title: string;
+  thumbnail: string;
   description: string;
   photos: Photo[];
   created_at: string;
@@ -22,7 +26,9 @@ const ManageGallery = () => {
   const { user } = useAuth();
   const [galleries, setGalleries] = useState<Gallery[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [eventPhotos, setEventPhotos] = useState<{ file: File; caption: string }[]>([]);
   const [form, setForm] = useState({
     title: '',
     description: ''
@@ -37,144 +43,191 @@ const ManageGallery = () => {
       const data = await getGalleries();
       setGalleries(data);
     } catch (error) {
-      handleError(error, 'Failed to fetch galleries');
+      handleError(error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedFiles?.length) {
-      handleError(new Error('Please select at least one photo'), 'No photos selected');
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append('title', form.title);
-    formData.append('description', form.description);
-    Array.from(selectedFiles).forEach((file, index) => {
-      formData.append('photos', file);
-    });
-
-    try {
-      await createGallery(formData);
-      await fetchGalleries();
-      setForm({ title: '', description: '' });
-      setSelectedFiles(null);
-    } catch (error) {
-      handleError(error, 'Failed to create gallery');
+  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setThumbnailFile(e.target.files[0]);
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this gallery?')) return;
-
-    try {
-      await deleteGallery(id);
-      await fetchGalleries();
-    } catch (error) {
-      handleError(error, 'Failed to delete gallery');
+  const handleEventPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const newPhotos = Array.from(e.target.files).map(file => ({
+        file,
+        caption: ''
+      }));
+      setEventPhotos([...eventPhotos, ...newPhotos]);
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-100 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">Loading galleries...</div>
-        </div>
-      </div>
-    );
-  }
+  const handleCaptionChange = (index: number, caption: string) => {
+    const updatedPhotos = [...eventPhotos];
+    updatedPhotos[index].caption = caption;
+    setEventPhotos(updatedPhotos);
+  };
+
+  const handleSubmit = async () => {
+    try {
+      setLoading(true);
+      if (!thumbnailFile) {
+        message.error('Please select a thumbnail image');
+        return;
+      }
+
+      // Upload thumbnail
+      const thumbnailFormData = new FormData();
+      thumbnailFormData.append('image', thumbnailFile);
+      const thumbnailResponse = await uploadImage(thumbnailFormData);
+
+      // Upload event photos
+      const photoUrls = await Promise.all(
+        eventPhotos.map(async (photo) => {
+          const photoFormData = new FormData();
+          photoFormData.append('image', photo.file);
+          const response = await uploadImage(photoFormData);
+          return {
+            url: response.url,
+            caption: photo.caption,
+            order: 0
+          };
+        })
+      );
+
+      // Create gallery
+      await createGallery({
+        title: form.title,
+        description: form.description,
+        thumbnail: thumbnailResponse.url,
+        photos: photoUrls,
+        created_by: user?.id
+      });
+
+      message.success('Gallery created successfully');
+      setModalVisible(false);
+      resetForm();
+      fetchGalleries();
+    } catch (error) {
+      handleError(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetForm = () => {
+    setForm({ title: '', description: '' });
+    setThumbnailFile(null);
+    setEventPhotos([]);
+  };
+
+  const removeEventPhoto = (index: number) => {
+    const updatedPhotos = [...eventPhotos];
+    updatedPhotos.splice(index, 1);
+    setEventPhotos(updatedPhotos);
+  };
 
   return (
-    <div className="min-h-screen bg-gray-100 py-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h2 className="text-2xl font-bold mb-4">Add New Gallery</h2>
+    <div className="p-6">
+      <div className="flex justify-between mb-6">
+        <h1 className="text-2xl font-bold">Manage Gallery</h1>
+        <Button type="primary" onClick={() => setModalVisible(true)} icon={<PlusOutlined />}>
+          Add New Event
+        </Button>
+      </div>
+
+      <Modal
+        title="Add New Event"
+        open={modalVisible}
+        onOk={handleSubmit}
+        onCancel={() => {
+          setModalVisible(false);
+          resetForm();
+        }}
+        confirmLoading={loading}
+        width={800}
+      >
+        <div className="space-y-4">
+          <Input
+            placeholder="Event Title"
+            value={form.title}
+            onChange={(e) => setForm({ ...form, title: e.target.value })}
+          />
+          <Input.TextArea
+            placeholder="Event Description"
+            value={form.description}
+            onChange={(e) => setForm({ ...form, description: e.target.value })}
+          />
           
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label htmlFor="title" className="block text-sm font-medium text-gray-700">
-                Title
-              </label>
-              <input
-                type="text"
-                id="title"
-                value={form.title}
-                onChange={e => setForm({ ...form, title: e.target.value })}
-                required
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          <div className="mt-4">
+            <p className="mb-2">Event Thumbnail</p>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleThumbnailChange}
+              className="mb-4"
+            />
+            {thumbnailFile && (
+              <Image
+                src={URL.createObjectURL(thumbnailFile)}
+                alt="Thumbnail preview"
+                width={200}
+                className="mt-2"
               />
-            </div>
+            )}
+          </div>
 
-            <div>
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-                Description
-              </label>
-              <input
-                type="text"
-                id="description"
-                value={form.description}
-                onChange={e => setForm({ ...form, description: e.target.value })}
-                required
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="photos" className="block text-sm font-medium text-gray-700">
-                Photos
-              </label>
-              <input
-                type="file"
-                id="photos"
-                multiple
-                accept="image/*"
-                onChange={e => setSelectedFiles(e.target.files)}
-                required
-                className="mt-1 block w-full"
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              Create Gallery
-            </button>
-          </form>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {galleries.map((gallery) => (
-            <div key={gallery.id} className="bg-white rounded-lg shadow-md overflow-hidden">
-              {gallery.photos[0] && (
-                <img
-                  src={gallery.photos[0].url}
-                  alt={gallery.title}
-                  className="w-full h-48 object-cover"
-                />
-              )}
-              <div className="p-4">
-                <h3 className="text-xl font-semibold mb-2">{gallery.title}</h3>
-                <p className="text-gray-600 mb-4">{gallery.description}</p>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-500">
-                    {new Date(gallery.created_at).toLocaleDateString()}
-                  </span>
-                  <button
-                    onClick={() => handleDelete(gallery.id)}
-                    className="text-red-600 hover:text-red-900"
-                  >
-                    Delete
-                  </button>
+          <div className="mt-4">
+            <p className="mb-2">Event Photos</p>
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handleEventPhotoChange}
+              className="mb-4"
+            />
+            <div className="grid grid-cols-3 gap-4">
+              {eventPhotos.map((photo, index) => (
+                <div key={index} className="relative">
+                  <Image
+                    src={URL.createObjectURL(photo.file)}
+                    alt={`Event photo ${index + 1}`}
+                    width={150}
+                  />
+                  <Input
+                    placeholder="Photo Caption (Optional)"
+                    value={photo.caption}
+                    onChange={(e) => handleCaptionChange(index, e.target.value)}
+                    className="mt-2"
+                  />
+                  <Button
+                    type="text"
+                    danger
+                    icon={<DeleteOutlined />}
+                    onClick={() => removeEventPhoto(index)}
+                    className="absolute top-0 right-0"
+                  />
                 </div>
-              </div>
+              ))}
             </div>
-          ))}
+          </div>
         </div>
+      </Modal>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {galleries.map((gallery) => (
+          <Card key={gallery.id} className="relative">
+            <Image src={gallery.thumbnail} alt={gallery.title} />
+            <h3 className="text-lg font-semibold mt-2">{gallery.title}</h3>
+            <p className="text-gray-600">{gallery.description}</p>
+            <p className="text-sm text-gray-500 mt-2">
+              Photos: {gallery.photos.length}
+            </p>
+          </Card>
+        ))}
       </div>
     </div>
   );

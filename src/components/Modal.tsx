@@ -2,10 +2,13 @@ import React from 'react';
 
 interface ModalProps {
   children: React.ReactNode;
+  isOpen: boolean;
   onClose: () => void;
 }
 
-const Modal: React.FC<ModalProps> = ({ children, onClose }) => {
+const Modal: React.FC<ModalProps> = ({ children, isOpen, onClose }) => {
+  if (!isOpen) return null;
+
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex items-center justify-center min-h-screen px-4">

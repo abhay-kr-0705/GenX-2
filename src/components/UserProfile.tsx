@@ -4,27 +4,44 @@ import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
 import LoadingSpinner from './LoadingSpinner';
 import { useAuthRedirect } from '../hooks/useAuthRedirect';
+import { updateProfile as apiUpdateProfile } from '../services/api';
 
 const UserProfile = () => {
   const { user, updateProfile, signOut } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
-    name: user?.name || '',
-    registration_no: user?.registration_no || '',
-    branch: user?.branch || '',
-    semester: user?.semester || '',
+    name: '',
+    registration_no: '',
+    branch: '',
+    semester: '',
+    mobile: '',
+    role: ''
   });
   const navigate = useNavigate();
   
   const { loading: authLoading } = useAuthRedirect(true);
+
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user.name || '',
+        registration_no: user.registration_no || '',
+        branch: user.branch || '',
+        semester: user.semester || '',
+        mobile: user.mobile || '',
+        role: user.role || ''
+      });
+    }
+  }, [user]);
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
 
     try {
-      await updateProfile(formData);
+      const updatedData = await apiUpdateProfile(formData);
+      await updateProfile(updatedData);
       toast.success('Profile updated successfully');
       setIsEditing(false);
     } catch (error) {
@@ -61,6 +78,7 @@ const UserProfile = () => {
                 <button
                   onClick={() => setIsEditing(true)}
                   className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                  disabled={submitting}
                 >
                   Edit Profile
                 </button>
@@ -68,6 +86,7 @@ const UserProfile = () => {
               <button
                 onClick={handleSignOut}
                 className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+                disabled={submitting}
               >
                 Sign Out
               </button>
@@ -140,11 +159,35 @@ const UserProfile = () => {
                 </select>
               </div>
 
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Mobile Number</label>
+                <input
+                  type="tel"
+                  name="mobile"
+                  value={formData.mobile}
+                  onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  disabled={submitting}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Role</label>
+                <input
+                  type="text"
+                  name="role"
+                  value={formData.role}
+                  onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  disabled={submitting}
+                />
+              </div>
+
               <div className="flex justify-end space-x-4">
                 <button
                   type="button"
                   onClick={() => setIsEditing(false)}
-                  className="px-4 py-2 text-gray-700 hover:text-gray-900"
+                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
                   disabled={submitting}
                 >
                   Cancel
@@ -175,6 +218,10 @@ const UserProfile = () => {
               <div>
                 <h3 className="text-sm font-medium text-gray-500">Semester</h3>
                 <p className="mt-1 text-lg">{user?.semester}</p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-gray-500">Mobile Number</h3>
+                <p className="mt-1 text-lg">{user?.mobile}</p>
               </div>
               <div>
                 <h3 className="text-sm font-medium text-gray-500">Role</h3>

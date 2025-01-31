@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { BarChart, Users, Calendar, BookOpen, Activity, Search } from 'lucide-react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { FaUsers, FaCalendarAlt, FaImages, FaBook } from 'react-icons/fa';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import toast from 'react-hot-toast';
 import { getAllUsers, getAllEventsWithRegistrations, createEvent } from '../../services/adminApi';
@@ -31,7 +31,6 @@ interface Event {
   start_date: string;
   end_date: string;
   venue: string;
-  registrations?: any[];
 }
 
 const INITIAL_USERS_TO_SHOW = 7;
@@ -61,9 +60,6 @@ const Dashboard = () => {
     end_date: '',
     venue: '',
   });
-
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-  const [showEventModal, setShowEventModal] = useState(false);
 
   useEffect(() => {
     fetchDashboardStats();
@@ -146,6 +142,10 @@ const Dashboard = () => {
     return filteredAndSortedUsers.slice(0, visibleUsers);
   }, [filteredAndSortedUsers, visibleUsers]);
 
+  const pastEvents = useMemo(() => {
+    return events.filter(event => new Date(event.start_date) < new Date());
+  }, [events]);
+
   const handleUserClick = (userId: string) => {
     navigate(`/admin/user/${userId}`); 
   };
@@ -163,23 +163,14 @@ const Dashboard = () => {
     }
   };
 
+  // Function to format date to dd/mm/yy
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    if (isNaN(date.getTime())) return '';
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
+    return date.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: '2-digit',
+      year: '2-digit'
     });
-  };
-
-  const handleViewEvent = (event: Event) => {
-    setSelectedEvent(event);
-    setShowEventModal(true);
-  };
-
-  const handleEditEvent = (eventId: string) => {
-    navigate(`/admin/events?edit=${eventId}`);
   };
 
   if (loading) {
@@ -199,7 +190,7 @@ const Dashboard = () => {
           <div className="bg-white rounded-lg shadow p-6 cursor-pointer hover:shadow-lg transition-shadow lg:col-span-4">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center">
-                <Users className="w-8 h-8 text-blue-500 mr-4" />
+                <FaUsers className="w-8 h-8 text-blue-500 mr-4" />
                 <div>
                   <p className="text-gray-600">Total Members</p>
                   <p className="text-2xl font-bold">{stats.totalMembers}</p>
@@ -214,7 +205,7 @@ const Dashboard = () => {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-64"
                 />
-                <Search className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" />
+                <FaUsers className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" />
               </div>
             </div>
 
@@ -257,7 +248,7 @@ const Dashboard = () => {
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {new Date(user.created_at).toLocaleDateString()}
+                          {formatDate(user.created_at)}
                         </td>
                       </tr>
                     ))}
@@ -273,129 +264,182 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold text-gray-800">Admin Dashboard</h1>
-            <button
-              onClick={() => navigate('/admin/events')}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
-            >
-              Manage Events
-            </button>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          {/* Manage Events Section */}
+          <div className="bg-white overflow-hidden shadow rounded-lg">
+            <div className="p-6">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <FaCalendarAlt className="h-8 w-8 text-gray-400" />
+                </div>
+                <div className="ml-4">
+                  <h2 className="text-lg font-medium text-gray-900">Manage Events</h2>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Add, edit, or remove events
+                  </p>
+                </div>
+              </div>
+              <div className="mt-6">
+                <Link
+                  to="/admin/events"
+                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                >
+                  Manage Events
+                </Link>
+              </div>
+            </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">Events</h2>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {events.map((event) => (
-                    <tr key={event._id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{event.name}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-500">{formatDate(event.start_date)}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-500">{event.start_date}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-500">{event.venue}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <button
-                          onClick={() => handleViewEvent(event)}
-                          className="text-blue-600 hover:text-blue-900 mr-4"
-                        >
-                          View Event
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          {/* Manage Resources Section */}
+          <div className="bg-white overflow-hidden shadow rounded-lg">
+            <div className="p-6">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <FaBook className="h-8 w-8 text-gray-400" />
+                </div>
+                <div className="ml-4">
+                  <h2 className="text-lg font-medium text-gray-900">Manage Resources</h2>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Add or remove learning resources
+                  </p>
+                </div>
+              </div>
+              <div className="mt-6">
+                <Link
+                  to="/admin/manage-resources"
+                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                >
+                  Manage Resources
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          {/* Manage Gallery Section */}
+          <div className="bg-white overflow-hidden shadow rounded-lg">
+            <div className="p-6">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <FaImages className="h-8 w-8 text-gray-400" />
+                </div>
+                <div className="ml-4">
+                  <h2 className="text-lg font-medium text-gray-900">Manage Gallery</h2>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Add or remove gallery images
+                  </p>
+                </div>
+              </div>
+              <div className="mt-6">
+                <Link
+                  to="/admin/manage-gallery"
+                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                >
+                  Manage Gallery
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          {/* Manage Users Section */}
+          <div className="bg-white overflow-hidden shadow rounded-lg">
+            <div className="p-6">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <FaUsers className="h-8 w-8 text-gray-400" />
+                </div>
+                <div className="ml-4">
+                  <h2 className="text-lg font-medium text-gray-900">Manage Users</h2>
+                  <p className="mt-1 text-sm text-gray-500">
+                    View and manage user accounts
+                  </p>
+                </div>
+              </div>
+              <div className="mt-6">
+                <Link
+                  to="/admin/manage-users"
+                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                >
+                  Manage Users
+                </Link>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Event Details Modal */}
-        {showEventModal && selectedEvent && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="p-6">
-                <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-2xl font-bold text-gray-800">{selectedEvent.name}</h3>
-                  <div className="flex gap-4">
-                    <button
-                      onClick={() => handleEditEvent(selectedEvent._id)}
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
-                    >
-                      Edit Event
-                    </button>
-                    <button
-                      onClick={() => setShowEventModal(false)}
-                      className="text-gray-500 hover:text-gray-700"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                </div>
-
-                {/* Event Details */}
-                <div className="mb-8">
-                  <h4 className="text-lg font-semibold mb-4">Event Details</h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-gray-600 mb-2">Date: {formatDate(selectedEvent.start_date)}</p>
-                      <p className="text-gray-600 mb-2">Time: {selectedEvent.start_date}</p>
-                      <p className="text-gray-600 mb-2">Location: {selectedEvent.venue}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-600 mb-4">Description:</p>
-                      <p className="text-gray-800">{selectedEvent.description}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Registered Students */}
+        {/* Event Form Modal */}
+        {showForm && (
+          <div className="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center">
+            <div className="bg-white rounded-lg shadow-lg p-6 max-w-lg w-full">
+              <h2 className="text-xl font-semibold mb-4">Create New Event</h2>
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <h4 className="text-lg font-semibold mb-4">Registered Students ({selectedEvent.registrations?.length || 0})</h4>
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-4 py-2 text-left">Name</th>
-                          <th className="px-4 py-2 text-left">Email</th>
-                          <th className="px-4 py-2 text-left">Registration No</th>
-                          <th className="px-4 py-2 text-left">Mobile</th>
-                          <th className="px-4 py-2 text-left">Semester</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {selectedEvent.registrations?.map((reg, index) => (
-                          <tr key={index} className="hover:bg-gray-50">
-                            <td className="px-4 py-2">{reg.name}</td>
-                            <td className="px-4 py-2">{reg.email}</td>
-                            <td className="px-4 py-2">{reg.registration_no}</td>
-                            <td className="px-4 py-2">{reg.mobile_no}</td>
-                            <td className="px-4 py-2">{reg.semester}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                  <input
+                    type="text"
+                    value={form.title}
+                    onChange={(e) => setForm({ ...form, title: e.target.value })}
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                  <textarea
+                    value={form.description}
+                    onChange={(e) => setForm({ ...form, description: e.target.value })}
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                    rows={4}
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                    <input
+                      type="date"
+                      value={form.date}
+                      onChange={(e) => setForm({ ...form, date: e.target.value })}
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                    <input
+                      type="date"
+                      value={form.end_date}
+                      onChange={(e) => setForm({ ...form, end_date: e.target.value })}
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
                   </div>
                 </div>
-              </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Venue</label>
+                  <input
+                    type="text"
+                    value={form.venue}
+                    onChange={(e) => setForm({ ...form, venue: e.target.value })}
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setShowForm(false)}
+                    className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors mr-2"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    Save Event
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}

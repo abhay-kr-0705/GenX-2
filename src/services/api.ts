@@ -1,17 +1,20 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { toast } from 'react-hot-toast';
 
-const API_URL = process.env.REACT_APP_API_URL || 'https://genx-backend-rdzx.onrender.com/api';
+const API_URL = 'https://genx-backend-rdzx.onrender.com/api';
 
+console.log('API URL:', API_URL); // Log the API URL being used
+
+// Create axios instance with default config
 const api = axios.create({
   baseURL: API_URL,
+  withCredentials: true,
   headers: {
-    'Content-Type': 'application/json',
-  },
-  withCredentials: true
+    'Content-Type': 'application/json'
+  }
 });
 
-// Request interceptor
+// Add request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -21,53 +24,37 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
-    console.error('Request error:', error);
+    console.error('Request interceptor error:', error);
     return Promise.reject(error);
   }
 );
 
-// Response interceptor
+// Add response interceptor for error handling
 api.interceptors.response.use(
   (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
+  (error: AxiosError) => {
+    console.error('API Error:', error);
 
-    // Handle network errors
-    if (!error.response) {
-      toast.error('Network error. Please check your connection.');
-      return Promise.reject(error);
+    // Handle authentication errors
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/login';
+      toast.error('Session expired. Please login again.');
     }
 
-    // Handle token expiration
-    if (error.response.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-      try {
-        const refreshToken = localStorage.getItem('refreshToken');
-        if (!refreshToken) {
-          throw new Error('No refresh token');
-        }
-
-        const response = await axios.post(`${API_URL}/auth/refresh-token`, {
-          refreshToken
-        });
-
-        const { token } = response.data;
-        localStorage.setItem('token', token);
-        originalRequest.headers.Authorization = `Bearer ${token}`;
-        return api(originalRequest);
-      } catch (refreshError) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('refreshToken');
-        window.location.href = '/login';
-        return Promise.reject(refreshError);
-      }
+    // Handle forbidden errors
+    if (error.response?.status === 403) {
+      toast.error('You do not have permission to perform this action');
     }
 
-    // Handle other errors
-    const errorMessage = error.response?.data?.message || 'An error occurred';
-    if (error.response.status !== 401) {
-      toast.error(errorMessage);
+    // Handle server errors
+    if (error.response?.status === 500) {
+      toast.error('Server error. Please try again later.');
     }
+
+    const errorMessage = error.response?.data?.message || error.message || 'An error occurred';
+    toast.error(errorMessage);
     return Promise.reject(error);
   }
 );
@@ -160,12 +147,44 @@ export const resetPassword = async (token: string, password: string) => {
   }
 };
 
-// Event APIs
-export const getEvents = async () => {
+// User Profile
+export const updateProfile = async (userData: {
+  name?: string;
+  registration_no?: string;
+  branch?: string;
+  semester?: string;
+  mobile?: string;
+  role?: string;
+}) => {
   try {
-    const response = await api.get('/events');
+    const response = await api.put('/users/profile', userData);
     return response.data;
   } catch (error) {
+    console.error('Profile update error:', error);
+    throw error;
+  }
+};
+
+// Event APIs
+export async function createEvent(eventData: {
+  title: string;
+  description: string;
+  date: string;
+  end_date: string;
+  venue: string;
+  type: 'upcoming' | 'past';
+}) {
+  try {
+    // Determine event type based on date
+    const eventDate = new Date(eventData.date);
+    const currentDate = new Date();
+    eventData.type = eventDate > currentDate ? 'upcoming' : 'past';
+
+    const response = await api.post('/events', eventData);
+    toast.success('Event created successfully');
+    return response.data;
+  } catch (error) {
+    console.error('Create event error:', error);
     throw error;
   }
 };
@@ -175,11 +194,13 @@ export const registerForEvent = async (eventId: string, registrationData: {
   email: string;
   registration_no: string;
   mobile_no: string;
+  semester: string;
 }) => {
   try {
     const response = await api.post(`/events/${eventId}/register`, registrationData);
     return response.data;
   } catch (error) {
+    console.error('Registration error:', error);
     throw error;
   }
 };
@@ -193,16 +214,9 @@ export const getUserRegistrations = async (email: string) => {
   }
 };
 
-export const createEvent = async (eventData: {
-  title: string;
-  description: string;
-  date: string;
-  end_date: string;
-  venue: string;
-  type: 'upcoming' | 'past';
-}) => {
+export const getEvents = async () => {
   try {
-    const response = await api.post('/events', eventData);
+    const response = await api.get('/events');
     return response.data;
   } catch (error) {
     throw error;
@@ -230,6 +244,16 @@ export const deleteEvent = async (id: string) => {
     const response = await api.delete(`/events/${id}`);
     return response.data;
   } catch (error) {
+    throw error;
+  }
+};
+
+export const getEventRegistrations = async (eventId: string) => {
+  try {
+    const response = await api.get(`/events/${eventId}/registrations`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching event registrations:', error);
     throw error;
   }
 };
@@ -339,4 +363,5 @@ export const deleteResource = async (id: string) => {
   }
 };
 
+// Export other API functions
 export default api;
