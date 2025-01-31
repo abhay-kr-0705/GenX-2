@@ -1,36 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Button, Modal, Input, Upload, message, Image, Space } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, LoadingOutlined } from '@ant-design/icons';
-import { getGalleries, createGallery, updateGallery, deleteGallery, uploadImage } from '../../services/api';
+import { getGalleries, createGallery, updateGallery, deleteGallery } from '../../services/api';
 import { handleError } from '../../utils/errorHandling';
 import { useAuth } from '../../contexts/AuthContext';
 
-interface Photo {
-  url: string;
-  caption?: string;
-  file?: File;
+interface Gallery {
+  id: string;
+  title: string;
+  thumbnail: string;
+  description: string;
+  photos: Photo[];
+  created_at: string;
 }
 
-interface Gallery {
-  _id: string;
-  title: string;
-  description: string;
-  thumbnail: string;
-  photos: Photo[];
-  created_by: string;
+interface Photo {
+  id: string;
+  url: string;
+  caption: string;
+  order: number;
 }
 
 const ManageGallery = () => {
   const { user } = useAuth();
   const [galleries, setGalleries] = useState<Gallery[]>([]);
+  const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [editingGallery, setEditingGallery] = useState<Gallery | null>(null);
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [eventPhotos, setEventPhotos] = useState<{ file: File; caption: string }[]>([]);
   const [form, setForm] = useState({
     title: '',
-    description: '',
-    thumbnail: null as File | null,
-    photos: [] as { file: File; caption: string; url: string }[]
+    description: ''
   });
 
   useEffect(() => {
@@ -42,110 +42,91 @@ const ManageGallery = () => {
       const data = await getGalleries();
       setGalleries(data);
     } catch (error) {
-      handleError(error);
-    }
-  };
-
-  const handleEditGallery = (gallery: Gallery) => {
-    setEditingGallery(gallery);
-    setForm({
-      title: gallery.title,
-      description: gallery.description,
-      thumbnail: null,
-      photos: gallery.photos.map(photo => ({
-        file: null as any,
-        caption: photo.caption || '',
-        url: photo.url
-      }))
-    });
-    setModalVisible(true);
-  };
-
-  const handleSubmit = async () => {
-    try {
-      setLoading(true);
-
-      let thumbnailUrl = editingGallery?.thumbnail || '';
-      if (form.thumbnail) {
-        const formData = new FormData();
-        formData.append('image', form.thumbnail);
-        const response = await uploadImage(formData);
-        thumbnailUrl = response.url;
-      }
-
-      const photoUploads = await Promise.all(
-        form.photos.map(async (photo) => {
-          if (photo.file) {
-            const formData = new FormData();
-            formData.append('image', photo.file);
-            const response = await uploadImage(formData);
-            return {
-              url: response.url,
-              caption: photo.caption
-            };
-          }
-          return {
-            url: photo.url,
-            caption: photo.caption
-          };
-        })
-      );
-
-      const galleryData = {
-        title: form.title,
-        description: form.description,
-        thumbnail: thumbnailUrl,
-        photos: photoUploads,
-        created_by: user?._id
-      };
-
-      if (editingGallery) {
-        await updateGallery(editingGallery._id, galleryData);
-        message.success('Gallery updated successfully');
-      } else {
-        await createGallery(galleryData);
-        message.success('Gallery created successfully');
-      }
-
-      setModalVisible(false);
-      resetForm();
-      fetchGalleries();
-    } catch (error) {
-      handleError(error);
+      handleError(error, 'Failed to fetch galleries');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDeletePhoto = (index: number) => {
-    if (editingGallery) {
-      const updatedPhotos = [...form.photos];
-      updatedPhotos.splice(index, 1);
-      setForm({ ...form, photos: updatedPhotos });
+  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setThumbnailFile(e.target.files[0]);
     }
   };
 
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    const newPhotos = files.map(file => ({
-      file,
-      caption: '',
-      url: URL.createObjectURL(file)
-    }));
-    setForm(prev => ({
-      ...prev,
-      photos: [...prev.photos, ...newPhotos]
-    }));
+  const handleEventPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const newPhotos = Array.from(e.target.files).map(file => ({
+        file,
+        caption: ''
+      }));
+      setEventPhotos([...eventPhotos, ...newPhotos]);
+    }
+  };
+
+  const handleCaptionChange = (index: number, caption: string) => {
+    const updatedPhotos = [...eventPhotos];
+    updatedPhotos[index].caption = caption;
+    setEventPhotos(updatedPhotos);
+  };
+
+  const handleSubmit = async () => {
+    try {
+      setLoading(true);
+      if (!thumbnailFile) {
+        message.error('Please select a thumbnail image');
+        return;
+      }
+
+      // Upload thumbnail
+      const thumbnailFormData = new FormData();
+      thumbnailFormData.append('image', thumbnailFile);
+      const thumbnailResponse = await uploadImage(thumbnailFormData);
+
+      // Upload event photos
+      const photoUrls = await Promise.all(
+        eventPhotos.map(async (photo) => {
+          const photoFormData = new FormData();
+          photoFormData.append('image', photo.file);
+          const response = await uploadImage(photoFormData);
+          return {
+            url: response.url,
+            caption: photo.caption,
+            order: 0
+          };
+        })
+      );
+
+      // Create gallery
+      await createGallery({
+        title: form.title,
+        description: form.description,
+        thumbnail: thumbnailResponse.url,
+        photos: photoUrls,
+        created_by: user?._id
+      });
+
+      message.success('Gallery created successfully');
+      setModalVisible(false);
+      resetForm();
+      fetchGalleries();
+    } catch (error) {
+      handleError(error, 'Failed to create gallery');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const resetForm = () => {
-    setForm({
-      title: '',
-      description: '',
-      thumbnail: null,
-      photos: []
-    });
-    setEditingGallery(null);
+    setForm({ title: '', description: '' });
+    setThumbnailFile(null);
+    setEventPhotos([]);
+  };
+
+  const removeEventPhoto = (index: number) => {
+    const updatedPhotos = [...eventPhotos];
+    updatedPhotos.splice(index, 1);
+    setEventPhotos(updatedPhotos);
   };
 
   const handleDeleteGallery = async (galleryId: string) => {
@@ -180,10 +161,7 @@ const ManageGallery = () => {
     <div className="p-6">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Manage Gallery</h1>
-        <Button type="primary" onClick={() => {
-          resetForm();
-          setModalVisible(true);
-        }} icon={<PlusOutlined />}>
+        <Button type="primary" onClick={() => setModalVisible(true)} icon={<PlusOutlined />}>
           Add New Gallery
         </Button>
       </div>
@@ -191,7 +169,7 @@ const ManageGallery = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {galleries.map((gallery) => (
           <Card
-            key={gallery._id}
+            key={gallery.id}
             cover={
               <div className="relative h-48">
                 <img
@@ -206,7 +184,7 @@ const ManageGallery = () => {
                 key="edit"
                 type="text"
                 icon={<EditOutlined />}
-                onClick={() => handleEditGallery(gallery)}
+                onClick={() => console.log('Edit gallery')}
               >
                 Edit
               </Button>,
@@ -215,7 +193,7 @@ const ManageGallery = () => {
                 type="text"
                 danger
                 icon={<DeleteOutlined />}
-                onClick={() => handleDeleteGallery(gallery._id)}
+                onClick={() => handleDeleteGallery(gallery.id)}
               >
                 Delete
               </Button>
@@ -233,7 +211,7 @@ const ManageGallery = () => {
       </div>
 
       <Modal
-        title={editingGallery ? "Edit Gallery" : "Add New Gallery"}
+        title="Add New Gallery"
         open={modalVisible}
         onOk={handleSubmit}
         onCancel={() => {
@@ -249,34 +227,27 @@ const ManageGallery = () => {
             value={form.title}
             onChange={(e) => setForm({ ...form, title: e.target.value })}
           />
-          
           <Input.TextArea
             placeholder="Gallery Description"
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
           />
-
+          
           <div className="mt-4">
             <p className="mb-2">Gallery Thumbnail</p>
             <input
               type="file"
               accept="image/*"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) {
-                  setForm({ ...form, thumbnail: file });
-                }
-              }}
+              onChange={handleThumbnailChange}
+              className="mb-4"
             />
-            {editingGallery && !form.thumbnail && (
-              <div className="mt-2">
-                <p className="text-sm text-gray-500">Current thumbnail:</p>
-                <Image
-                  src={editingGallery.thumbnail}
-                  alt="Current thumbnail"
-                  width={150}
-                />
-              </div>
+            {thumbnailFile && (
+              <Image
+                src={URL.createObjectURL(thumbnailFile)}
+                alt="Thumbnail preview"
+                width={200}
+                className="mt-2"
+              />
             )}
           </div>
 
@@ -286,33 +257,29 @@ const ManageGallery = () => {
               type="file"
               accept="image/*"
               multiple
-              onChange={handlePhotoChange}
+              onChange={handleEventPhotoChange}
+              className="mb-4"
             />
-
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
-              {form.photos.map((photo, index) => (
+            <div className="grid grid-cols-3 gap-4">
+              {eventPhotos.map((photo, index) => (
                 <div key={index} className="relative">
                   <Image
-                    src={photo.url}
+                    src={URL.createObjectURL(photo.file)}
                     alt={`Gallery photo ${index + 1}`}
                     width={150}
                   />
                   <Input
-                    placeholder="Photo Caption"
+                    placeholder="Photo Caption (Optional)"
                     value={photo.caption}
-                    onChange={(e) => {
-                      const updatedPhotos = [...form.photos];
-                      updatedPhotos[index].caption = e.target.value;
-                      setForm({ ...form, photos: updatedPhotos });
-                    }}
+                    onChange={(e) => handleCaptionChange(index, e.target.value)}
                     className="mt-2"
                   />
                   <Button
                     type="text"
                     danger
                     icon={<DeleteOutlined />}
-                    onClick={() => handleDeletePhoto(index)}
-                    className="absolute top-0 right-0 bg-white rounded-full"
+                    onClick={() => removeEventPhoto(index)}
+                    className="absolute top-0 right-0"
                   />
                 </div>
               ))}

@@ -99,14 +99,12 @@ const GalleryPage = () => {
               onClick={() => handleGalleryClick(gallery)}
             >
               <Card.Meta
-                title={
-                  <div className="flex justify-between items-center">
-                    <span className="text-lg font-semibold">{gallery.title}</span>
-                    <span className="text-sm text-gray-500">{gallery.photos.length} photos</span>
-                  </div>
-                }
+                title={gallery.title}
                 description={gallery.description}
               />
+              <p className="mt-2 text-sm text-gray-500">
+                {gallery.photos.length} photos
+              </p>
             </Card>
           ))}
         </div>
