@@ -43,10 +43,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const handleLogin = async (email: string, password: string) => {
     try {
-      const { data } = await apiLogin(email, password);
-      setAuthToken(data.token);
-      setUserState(data.user);
-      setUser(data.user);
+      const response = await apiLogin(email, password);
+      if (response.success && response.token && response.user) {
+        setAuthToken(response.token);
+        setUserState(response.user);
+        setUser(response.user);
+      } else {
+        throw new Error('Invalid login response');
+      }
     } catch (error) {
       handleError(error, 'Login failed');
       throw error;
