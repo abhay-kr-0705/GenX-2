@@ -286,9 +286,48 @@ const updateGallery = async (id: string, galleryData: any) => {
   }
 };
 
-const deleteGallery = async (id: string) => {
+const deleteGallery = async (galleryId: string) => {
   try {
-    const response = await api.delete(`/gallery/${id}`);
+    const response = await api.delete(`/gallery/${galleryId}`);
+    return response.data;
+  } catch (error) {
+    handleApiError(error);
+    throw error;
+  }
+};
+
+// Gallery management
+const updateGalleryPhotos = async (galleryId: string, photos: FormData) => {
+  try {
+    const response = await api.put(`/gallery/${galleryId}/photos`, photos, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  } catch (error) {
+    handleApiError(error);
+    throw error;
+  }
+};
+
+const removeGalleryPhoto = async (galleryId: string, photoId: string) => {
+  try {
+    const response = await api.delete(`/gallery/${galleryId}/photos/${photoId}`);
+    return response.data;
+  } catch (error) {
+    handleApiError(error);
+    throw error;
+  }
+};
+
+const updateGalleryThumbnail = async (galleryId: string, thumbnail: FormData) => {
+  try {
+    const response = await api.put(`/gallery/${galleryId}/thumbnail`, thumbnail, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data;
   } catch (error) {
     handleApiError(error);
@@ -362,6 +401,7 @@ const deleteResource = async (id: string) => {
   }
 };
 
+// Export all functions
 export {
   login,
   register,
@@ -383,12 +423,15 @@ export {
   createGallery,
   updateGallery,
   deleteGallery,
+  updateGalleryPhotos,
+  removeGalleryPhoto,
+  updateGalleryThumbnail,
   uploadImage,
   getResources,
   getResource,
   createResource,
   updateResource,
-  deleteResource
+  deleteResource,
 };
 
 export default api;

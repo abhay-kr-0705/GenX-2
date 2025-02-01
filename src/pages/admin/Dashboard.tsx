@@ -4,6 +4,15 @@ import { FaUsers, FaCalendarAlt, FaImages, FaBook } from 'react-icons/fa';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import toast from 'react-hot-toast';
 import { getAllUsers, getAllEventsWithRegistrations, createEvent } from '../../services/adminApi';
+import { Card, Row, Col } from 'antd';
+import {
+  CalendarOutlined,
+  FileOutlined,
+  PictureOutlined,
+  UserOutlined,
+  LineChartOutlined,
+  TeamOutlined
+} from '@ant-design/icons';
 
 interface DashboardStats {
   totalMembers: number;
@@ -182,10 +191,83 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Admin Dashboard</h1>
-        
+    <div className="min-h-screen bg-gray-100 py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            Admin Dashboard
+          </h1>
+          <p className="text-lg text-gray-600">
+            Manage and monitor all aspects of your platform
+          </p>
+        </div>
+
+        {/* Management Section */}
+        <div className="mb-12">
+          <Row gutter={[16, 16]}>
+            <Col xs={24} sm={12} lg={6}>
+              <Link to="/admin/events">
+                <Card 
+                  hoverable 
+                  className="h-full bg-white shadow-sm hover:shadow-md transition-shadow"
+                >
+                  <div className="text-center">
+                    <CalendarOutlined className="text-4xl text-blue-600 mb-4" />
+                    <h3 className="text-xl font-semibold mb-2">Manage Events</h3>
+                    <p className="text-gray-600">Add, edit, or remove events</p>
+                  </div>
+                </Card>
+              </Link>
+            </Col>
+
+            <Col xs={24} sm={12} lg={6}>
+              <Link to="/admin/resources">
+                <Card 
+                  hoverable 
+                  className="h-full bg-white shadow-sm hover:shadow-md transition-shadow"
+                >
+                  <div className="text-center">
+                    <FileOutlined className="text-4xl text-green-600 mb-4" />
+                    <h3 className="text-xl font-semibold mb-2">Manage Resources</h3>
+                    <p className="text-gray-600">Add or remove learning resources</p>
+                  </div>
+                </Card>
+              </Link>
+            </Col>
+
+            <Col xs={24} sm={12} lg={6}>
+              <Link to="/admin/gallery">
+                <Card 
+                  hoverable 
+                  className="h-full bg-white shadow-sm hover:shadow-md transition-shadow"
+                >
+                  <div className="text-center">
+                    <PictureOutlined className="text-4xl text-purple-600 mb-4" />
+                    <h3 className="text-xl font-semibold mb-2">Manage Gallery</h3>
+                    <p className="text-gray-600">Add or remove gallery images</p>
+                  </div>
+                </Card>
+              </Link>
+            </Col>
+
+            <Col xs={24} sm={12} lg={6}>
+              <Link to="/admin/users">
+                <Card 
+                  hoverable 
+                  className="h-full bg-white shadow-sm hover:shadow-md transition-shadow"
+                >
+                  <div className="text-center">
+                    <UserOutlined className="text-4xl text-red-600 mb-4" />
+                    <h3 className="text-xl font-semibold mb-2">Manage Users</h3>
+                    <p className="text-gray-600">View and manage user accounts</p>
+                  </div>
+                </Card>
+              </Link>
+            </Col>
+          </Row>
+        </div>
+
+        {/* User List Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow p-6 cursor-pointer hover:shadow-lg transition-shadow lg:col-span-4">
             <div className="flex items-center justify-between mb-6">
@@ -259,108 +341,6 @@ const Dashboard = () => {
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                   </div>
                 )}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          {/* Manage Events Section */}
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <FaCalendarAlt className="h-8 w-8 text-gray-400" />
-                </div>
-                <div className="ml-4">
-                  <h2 className="text-lg font-medium text-gray-900">Manage Events</h2>
-                  <p className="mt-1 text-sm text-gray-500">
-                    Add, edit, or remove events
-                  </p>
-                </div>
-              </div>
-              <div className="mt-6">
-                <Link
-                  to="/admin/events"
-                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                >
-                  Manage Events
-                </Link>
-              </div>
-            </div>
-          </div>
-
-          {/* Manage Resources Section */}
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <FaBook className="h-8 w-8 text-gray-400" />
-                </div>
-                <div className="ml-4">
-                  <h2 className="text-lg font-medium text-gray-900">Manage Resources</h2>
-                  <p className="mt-1 text-sm text-gray-500">
-                    Add or remove learning resources
-                  </p>
-                </div>
-              </div>
-              <div className="mt-6">
-                <Link
-                  to="/admin/manage-resources"
-                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                >
-                  Manage Resources
-                </Link>
-              </div>
-            </div>
-          </div>
-
-          {/* Manage Gallery Section */}
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <FaImages className="h-8 w-8 text-gray-400" />
-                </div>
-                <div className="ml-4">
-                  <h2 className="text-lg font-medium text-gray-900">Manage Gallery</h2>
-                  <p className="mt-1 text-sm text-gray-500">
-                    Add or remove gallery images
-                  </p>
-                </div>
-              </div>
-              <div className="mt-6">
-                <Link
-                  to="/admin/gallery"
-                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                >
-                  Manage Gallery
-                </Link>
-              </div>
-            </div>
-          </div>
-
-          {/* Manage Users Section */}
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <FaUsers className="h-8 w-8 text-gray-400" />
-                </div>
-                <div className="ml-4">
-                  <h2 className="text-lg font-medium text-gray-900">Manage Users</h2>
-                  <p className="mt-1 text-sm text-gray-500">
-                    View and manage user accounts
-                  </p>
-                </div>
-              </div>
-              <div className="mt-6">
-                <Link
-                  to="/admin/manage-users"
-                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                >
-                  Manage Users
-                </Link>
               </div>
             </div>
           </div>

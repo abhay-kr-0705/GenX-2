@@ -76,35 +76,48 @@ const GalleryPage = () => {
   return (
     <div className="min-h-screen bg-gray-100 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-bold text-center mb-8">Event Gallery</h1>
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4 relative inline-block">
+            Event Gallery
+            <div className="absolute bottom-0 left-0 w-full h-1 bg-blue-600 transform scale-x-0 transition-transform duration-300 group-hover:scale-x-100"></div>
+          </h1>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Explore our memorable moments captured through these stunning photographs
+          </p>
+        </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {galleries.map((gallery) => (
             <Card
               key={gallery.id}
               hoverable
+              className="overflow-hidden h-full flex flex-col gallery-card"
               cover={
-                <div className="relative h-48">
+                <div className="relative gallery-image-container">
                   <Image
                     src={gallery.thumbnail}
                     alt={gallery.title}
-                    className="w-full h-full object-cover"
+                    className="w-full object-contain"
                     preview={false}
                   />
-                  <div className="absolute inset-0 bg-black bg-opacity-40 opacity-0 hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                    <EyeOutlined className="text-white text-2xl" />
+                  <div className="gallery-overlay">
+                    <EyeOutlined className="text-4xl text-white" />
                   </div>
                 </div>
               }
               onClick={() => handleGalleryClick(gallery)}
             >
-              <Card.Meta
-                title={gallery.title}
-                description={gallery.description}
-              />
-              <p className="mt-2 text-sm text-gray-500">
-                {gallery.photos.length} photos
-              </p>
+              <div className="p-4">
+                <h3 className="text-xl font-semibold mb-2">{gallery.title}</h3>
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-sm text-gray-500">{gallery.photos.length} photos</p>
+                  <div className="flex items-center text-blue-600 hover:text-blue-700">
+                    <EyeOutlined className="mr-1" />
+                    <span className="text-sm">View Gallery</span>
+                  </div>
+                </div>
+                <p className="text-gray-600 text-sm">{gallery.description}</p>
+              </div>
             </Card>
           ))}
         </div>
@@ -152,27 +165,29 @@ const GalleryPage = () => {
               current: selectedPhotoIndex || 0,
               countRender: (current, total) => `${current} / ${total}`,
               toolbarRender: (_, { transform: { scale }, actions: { onFlipY, onFlipX, onRotateLeft, onRotateRight, onZoomOut, onZoomIn }}) => (
-                <div className="ant-image-preview-operations">
-                  <Space size={12}>
-                    <Button type="text" onClick={onFlipY}>
-                      <SwapOutlined rotate={90} />
-                    </Button>
-                    <Button type="text" onClick={onFlipX}>
-                      <SwapOutlined />
-                    </Button>
-                    <Button type="text" onClick={onRotateLeft}>
-                      <RotateLeftOutlined />
-                    </Button>
-                    <Button type="text" onClick={onRotateRight}>
-                      <RotateRightOutlined />
-                    </Button>
-                    <Button type="text" onClick={onZoomOut}>
-                      <ZoomOutOutlined />
-                    </Button>
-                    <Button type="text" onClick={onZoomIn}>
-                      <ZoomInOutlined />
-                    </Button>
-                  </Space>
+                <div className="ant-image-preview-operations-wrapper">
+                  <div className="ant-image-preview-operations">
+                    <Space size={12} className="p-2">
+                      <Button type="text" className="text-white hover:text-gray-300" onClick={onFlipY}>
+                        <SwapOutlined rotate={90} style={{ fontSize: '20px' }} />
+                      </Button>
+                      <Button type="text" className="text-white hover:text-gray-300" onClick={onFlipX}>
+                        <SwapOutlined style={{ fontSize: '20px' }} />
+                      </Button>
+                      <Button type="text" className="text-white hover:text-gray-300" onClick={onRotateLeft}>
+                        <RotateLeftOutlined style={{ fontSize: '20px' }} />
+                      </Button>
+                      <Button type="text" className="text-white hover:text-gray-300" onClick={onRotateRight}>
+                        <RotateRightOutlined style={{ fontSize: '20px' }} />
+                      </Button>
+                      <Button type="text" className="text-white hover:text-gray-300" onClick={onZoomOut}>
+                        <ZoomOutOutlined style={{ fontSize: '20px' }} />
+                      </Button>
+                      <Button type="text" className="text-white hover:text-gray-300" onClick={onZoomIn}>
+                        <ZoomInOutlined style={{ fontSize: '20px' }} />
+                      </Button>
+                    </Space>
+                  </div>
                 </div>
               )
             }}
