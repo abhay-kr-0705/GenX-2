@@ -17,7 +17,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   const { user, loading } = useAuth();
   const location = useLocation();
 
-  const isAdmin = user?.email === 'abhayk7481@gmail.com';
+  const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
 
   if (loading) {
     return <LoadingSpinner />;

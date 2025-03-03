@@ -18,6 +18,7 @@ import AnkitUpadhyay from './Ankit.jpg';
 import Niraj from './Niraj.png';
 import Suruchi from './Suruchi.jpg';
 import Mentor from './mentor.jpg';
+import principal1 from './principal.jpg';
 
 interface TeamMember {
   id: number;
@@ -29,16 +30,22 @@ interface TeamMember {
   email?: string;
   instagram?: string;
 }
+const principal: TeamMember = {
+  id: 1,
+  name: 'Mr. Manish Kumar',
+  role: 'Principal, SEC Sasaram',
+  image: principal1,
+};
 
 const mentor: TeamMember = {
-  id: 1,
+  id: 2,
   name: 'Mr. Om Prakash',
   role: 'SPOC, GenX',
   image: Mentor,
 };
 
 const founder: TeamMember = {
-  id: 2,
+  id: 3,
   name: 'Niraj Kumar',
   role: 'Founder, GenX',
   image: Niraj,
@@ -48,26 +55,26 @@ const founder: TeamMember = {
 
 const leaders: TeamMember[] = [
   {
-    id: 3,
-    name: 'Leader Name',
+    id: 4,
+    name: 'Abhay Kumar',
     role: 'Leader',
-    image: '/leader.png',
-    instagram: 'https://instagram.com/leade..........r',
-    linkedin: 'https://linkedin.com/in/leader.........'
+    image: Abhay,
+    instagram: 'https://instagram.com/abhay_kr.0705/',
+    linkedin: 'https://linkedin.com/in/abhay-kumar-81b2a8288/'
   },
   {
-    id: 4,
-    name: 'Co-Leader Name',
+    id: 5,
+    name: 'Abhiraj Kumar',
     role: 'Co-Leader',
-    image: '/coleader.png',
-    instagram: 'https://instagram.com/coleader....',
-    linkedin: 'https://linkedin.com/in/coleader...'
+    image: Abhiraj,
+    instagram: 'https://instagram.com/abhiraj23',
+    linkedin: 'https://linkedin.com/in/abhiraj23'
   }
 ];
 
 const domainLeads: TeamMember[] = [
   {
-    id: 5,
+    id: 6,
     name: 'Abhay Kumar',
     role: 'Robotics & IoT Lead',
     image: Abhay,
@@ -75,7 +82,7 @@ const domainLeads: TeamMember[] = [
     linkedin: 'https://www.linkedin.com/in/abhay-kumar-81b2a8288/'
   },
   {
-    id: 6,
+    id: 7,
     name: 'Devika Kumari',
     role: 'Competitive Programming Lead',
     image: Devika,
@@ -83,7 +90,7 @@ const domainLeads: TeamMember[] = [
     linkedin: 'https://www.linkedin.com/in/devika-kumari-1bb2a22a6?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app'
   },
   {
-    id: 7,
+    id: 8,
     name: 'Abhishek Kumar',
     role: 'Creativity Lead',
     image: AbhishekK,
@@ -91,7 +98,7 @@ const domainLeads: TeamMember[] = [
     linkedin: 'https://www.linkedin.com/in/abhishek-kumar-4ba2801a7?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app'
   },
   {
-    id: 8,
+    id: 9,
     name: 'Abhiraj Kumar',
     role: 'Outreach Lead',
     image: Abhiraj,
@@ -99,7 +106,7 @@ const domainLeads: TeamMember[] = [
     linkedin: 'https://www.linkedin.com/in/abhiraj23'
   },
   {
-    id: 9,
+    id: 10,
     name: 'Prakhar Prasad',
     role: 'Web Development Lead',
     image: Prakhar,
@@ -107,7 +114,7 @@ const domainLeads: TeamMember[] = [
     linkedin: 'https://www.linkedin.com/in/prakhar-prasad-0887b5343?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app'
   },
   {
-    id: 10,
+    id: 11,
     name: 'Abhishek Singh',
     role: 'App Development Lead',
     image: Abhishek,
@@ -115,15 +122,15 @@ const domainLeads: TeamMember[] = [
     linkedin: 'https://www.linkedin.com/in/abhisheksinghexpert'
   },
   {
-    id: 11,
-    name: 'Abhishek Jha',
+    id: 12,
+    name: 'Abhishek Kumar Jha',
     role: 'Cybersecurity Lead',
     image: AbhishekKumarJha,
     instagram: 'https://www.instagram.com/abhisekhkumar__?igsh=ODJmOWx6MXV3cTc4',
     linkedin: 'https://www.linkedin.com/in/abhisekh-kumar-jha-816407329?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app'
   },
   {
-    id: 12,
+    id: 13,
     name: '..........',
     role: 'AI ML Lead',
     image: blank,
@@ -135,7 +142,7 @@ const domainLeads: TeamMember[] = [
 const domainCoLeads: TeamMember[] = [
   
   {
-    id: 13,
+    id: 14,
     name: 'Ankit Upadhyay',
     role: 'App Development Co-Lead',
     image: AnkitUpadhyay,
@@ -143,7 +150,7 @@ const domainCoLeads: TeamMember[] = [
     linkedin: 'https://www.linkedin.com/in/ankit-upadhyay-083058287?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app'
   },
   {
-    id: 14,
+    id: 15,
     name: 'Suruchi Kumari',
     role: 'Outreach Co-Lead',
     image: Suruchi,
@@ -151,7 +158,7 @@ const domainCoLeads: TeamMember[] = [
     linkedin: 'https://www.linkedin.com/in/suruchi2023'
   },
   {
-    id: 15,
+    id: 16,
     name: 'Anjali Chauhan',
     role: 'Robotics & IoT Co-Lead',
     image: Anjali,
@@ -159,7 +166,7 @@ const domainCoLeads: TeamMember[] = [
     linkedin: 'https://www.linkedin.com/in/anjali-c-637619331?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app'
   },
   {
-    id: 16,
+    id: 17,
     name: 'Rakhee Kumari',
     role: 'Competitive Programming Co-Lead',
     image: Rakhee,
@@ -167,7 +174,7 @@ const domainCoLeads: TeamMember[] = [
     linkedin: 'https://www.linkedin.com/in/rakhee-768943281?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app'
   },
   {
-    id: 17,
+    id: 18,
     name: 'Braj Kumar',
     role: 'Creativity Co-Lead',
     image: Braj,
@@ -175,7 +182,7 @@ const domainCoLeads: TeamMember[] = [
     linkedin: 'https://www.linkedin.com/in/abbraj'
   },
   {
-    id: 18,
+    id: 19,
     name: 'Saurabh Kumar',
     role: 'Cybersecurity Co-Lead',
     image: Saurabh,
@@ -184,7 +191,7 @@ const domainCoLeads: TeamMember[] = [
   },
   
   {
-    id: 19,
+    id: 20,
     name: 'Ankita kumari',
     role: 'Web Development Co-Lead',
     image: Ankita,
@@ -192,7 +199,7 @@ const domainCoLeads: TeamMember[] = [
     linkedin: 'https://linkedin.com/in/....'
   },
   {
-    id: 20,
+    id: 21,
     name: '..........',
     role: 'AI ML Co-Lead',
     image: blank,
@@ -289,6 +296,11 @@ const Team = () => {
         <div className="mb-24">
           <SectionTitle title="Club Mentorship" />
           <div className="flex flex-col sm:flex-row justify-center gap-6 lg:gap-8 max-w-7xl mx-auto">
+            {principal && (
+              <div className="w-full sm:w-1/3 lg:w-1/4 animate-fadeIn">
+                <TeamMemberCard member={principal} />
+              </div>
+            )}
             {mentor && (
               <div className="w-full sm:w-1/3 lg:w-1/4 animate-fadeIn">
                 <TeamMemberCard member={mentor} />

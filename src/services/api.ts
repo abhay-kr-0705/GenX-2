@@ -118,6 +118,24 @@ const resetPassword = async (token: string, password: string) => {
   }
 };
 
+// Change password
+const changePassword = async (currentPassword: string, newPassword: string) => {
+  try {
+    const response = await api.put('/auth/change-password', {
+      currentPassword,
+      newPassword
+    });
+    if (response.data.success) {
+      toast.success('Password changed successfully');
+    }
+    return response.data;
+  } catch (error: any) {
+    const errorMessage = error?.response?.data?.message || 'Failed to change password';
+    handleApiError(error);
+    throw error;
+  }
+};
+
 // User Profile
 const updateProfile = async (userData: {
   name?: string;
@@ -128,7 +146,10 @@ const updateProfile = async (userData: {
   role?: string;
 }) => {
   try {
-    const response = await api.put('/users/profile', userData);
+    const response = await api.put('/auth/update-profile', userData);
+    if (response.data.success) {
+      toast.success('Profile updated successfully');
+    }
     return response.data;
   } catch (error) {
     handleApiError(error);
@@ -266,9 +287,13 @@ const getGalleryPhotos = async () => {
   }
 };
 
-const createGallery = async (galleryData: any) => {
+const createGallery = async (galleryData: FormData) => {
   try {
-    const response = await api.post('/gallery', galleryData);
+    const response = await api.post('/gallery', galleryData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data;
   } catch (error) {
     handleApiError(error);
@@ -351,6 +376,14 @@ const uploadImage = async (formData: FormData) => {
 };
 
 // Resources
+interface ResourceData {
+  title: string;
+  description: string;
+  url: string;
+  type: string;
+  domain?: string;
+}
+
 const getResources = async () => {
   try {
     const response = await api.get('/resources');
@@ -371,9 +404,12 @@ const getResource = async (id: string) => {
   }
 };
 
-const createResource = async (resourceData: any) => {
+const createResource = async (data: ResourceData) => {
   try {
-    const response = await api.post('/resources', resourceData);
+    const response = await api.post('/resources', data);
+    if (response.data.success) {
+      toast.success('Resource created successfully');
+    }
     return response.data;
   } catch (error) {
     handleApiError(error);
@@ -381,9 +417,12 @@ const createResource = async (resourceData: any) => {
   }
 };
 
-const updateResource = async (id: string, resourceData: any) => {
+const updateResource = async (id: string, data: ResourceData) => {
   try {
-    const response = await api.put(`/resources/${id}`, resourceData);
+    const response = await api.put(`/resources/${id}`, data);
+    if (response.data.success) {
+      toast.success('Resource updated successfully');
+    }
     return response.data;
   } catch (error) {
     handleApiError(error);
@@ -410,6 +449,7 @@ export {
   forgotPassword,
   resetPassword,
   updateProfile,
+  changePassword,
   createEvent,
   registerForEvent,
   getUserRegistrations,

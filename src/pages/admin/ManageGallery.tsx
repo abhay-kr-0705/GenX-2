@@ -182,6 +182,42 @@ const ManageGallery = () => {
     }
   };
 
+  const handleCreateGallery = async () => {
+    if (!form.title || !thumbnailFile) {
+      message.error('Please fill in all required fields');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('title', form.title);
+      if (form.description) {
+        formData.append('description', form.description);
+      }
+      formData.append('thumbnail', thumbnailFile);
+      
+      if (fileList.length > 0) {
+        fileList.forEach(file => {
+          formData.append('photos', file);
+        });
+      }
+
+      const newGallery = await createGallery(formData);
+      setGalleries(prev => [...prev, newGallery]);
+      setModalVisible(false);
+      setForm({ title: '', description: '' });
+      setThumbnailFile(null);
+      setFileList([]);
+      message.success('Gallery created successfully');
+    } catch (error) {
+      console.error('Error creating gallery:', error);
+      message.error('Failed to create gallery');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="p-6">
       <div className="flex justify-between mb-6">
@@ -194,6 +230,91 @@ const ManageGallery = () => {
           Add New Gallery
         </Button>
       </div>
+
+      <Modal
+        title="Add New Gallery"
+        open={modalVisible}
+        onCancel={() => {
+          setModalVisible(false);
+          setForm({ title: '', description: '' });
+          setThumbnailFile(null);
+          setFileList([]);
+        }}
+        footer={null}
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Title</label>
+            <Input
+              placeholder="Gallery Title"
+              value={form.title}
+              onChange={(e) => setForm({ ...form, title: e.target.value })}
+              className="mt-1"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Description</label>
+            <Input.TextArea
+              placeholder="Gallery Description"
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              className="mt-1"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Thumbnail</label>
+            <Upload
+              beforeUpload={(file) => {
+                setThumbnailFile(file);
+                return false;
+              }}
+              maxCount={1}
+              fileList={thumbnailFile ? [thumbnailFile] : []}
+              onRemove={() => setThumbnailFile(null)}
+            >
+              <Button icon={<PlusOutlined />}>Select Thumbnail</Button>
+            </Upload>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Photos</label>
+            <Upload
+              beforeUpload={(file) => {
+                setFileList(prev => [...prev, file]);
+                return false;
+              }}
+              fileList={fileList}
+              multiple
+              onRemove={(file) => {
+                setFileList(prev => prev.filter(f => f.uid !== file.uid));
+              }}
+            >
+              <Button icon={<PlusOutlined />}>Select Photos</Button>
+            </Upload>
+          </div>
+
+          <div className="flex justify-end space-x-2 mt-4">
+            <Button onClick={() => {
+              setModalVisible(false);
+              setForm({ title: '', description: '' });
+              setThumbnailFile(null);
+              setFileList([]);
+            }}>
+              Cancel
+            </Button>
+            <Button
+              type="primary"
+              onClick={handleCreateGallery}
+              loading={loading}
+              disabled={!form.title || !thumbnailFile}
+            >
+              Create Gallery
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {galleries.map(gallery => (
