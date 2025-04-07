@@ -42,7 +42,7 @@ const EventCard = ({ event, isRegistered, onRegister, onViewMore, user, delay = 
     
     if (isRegistered) {
       return (
-        <div className="px-4 py-2 bg-green-100 text-green-800 rounded-md font-medium text-center">
+        <div className="w-full px-4 py-2 bg-green-100 text-green-800 rounded-md font-medium text-center">
           Registered ✓
         </div>
       );
@@ -52,7 +52,7 @@ const EventCard = ({ event, isRegistered, onRegister, onViewMore, user, delay = 
       return (
         <Link
           to="/login"
-          className="px-4 py-2 bg-gray-100 text-gray-600 rounded-md font-medium text-center hover:bg-gray-200 transition-colors"
+          className="w-full block px-4 py-2 bg-gray-100 text-gray-600 rounded-md font-medium text-center hover:bg-gray-200 transition-colors"
         >
           Login to Register
         </Link>
@@ -62,7 +62,7 @@ const EventCard = ({ event, isRegistered, onRegister, onViewMore, user, delay = 
     return (
       <button
         onClick={() => onRegister(event)}
-        className="px-4 py-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition-colors"
+        className="w-full px-4 py-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition-colors"
       >
         Register Now
       </button>
@@ -92,14 +92,14 @@ const EventCard = ({ event, isRegistered, onRegister, onViewMore, user, delay = 
           <p>Date: {formatDate(event.date)} - {formatDate(event.end_date)}</p>
           <p>Venue: {event.venue}</p>
         </div>
-        <div className="flex justify-between items-center space-x-4">
+        <div className="flex flex-col sm:flex-row gap-4">
           <button
             onClick={() => onViewMore(event)}
-            className="flex-1 px-4 py-2 border border-blue-600 text-blue-600 rounded-md font-medium hover:bg-blue-50 transition-colors text-center"
+            className="w-full px-4 py-2 border border-blue-600 text-blue-600 rounded-md font-medium hover:bg-blue-50 transition-colors text-center"
           >
             View Details
           </button>
-          <div className="flex-1">
+          <div className="w-full">
             {getRegistrationButton()}
           </div>
         </div>
@@ -138,7 +138,13 @@ const Events = () => {
   const fetchEvents = async () => {
     try {
       const data = await getEvents();
-      setEvents(data);
+      // Update event types based on current date
+      const currentDate = new Date();
+      const updatedEvents = data.map(event => ({
+        ...event,
+        type: new Date(event.end_date) < currentDate ? 'past' : 'upcoming'
+      }));
+      setEvents(updatedEvents);
     } catch (error) {
       console.error('Error fetching events:', error);
       toast.error('Failed to fetch events');

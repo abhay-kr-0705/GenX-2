@@ -86,17 +86,17 @@ const Footer = () => {
               <li className="group">
                 <a href="https://maps.google.com" target="_blank" rel="noopener noreferrer" className="flex items-start space-x-3 text-gray-300 hover:text-white transition-colors duration-300">
                   <MapPin className="w-5 h-5 text-blue-400 group-hover:text-blue-300 flex-shrink-0 mt-1" />
-                  <span className="text-sm">Sereshah Engineering College, Sereshah, India</span>
+                  <span className="text-sm">Sereshah Engineering College, Sasaram, Bihar, India</span>
                 </a>
               </li>
               <li className="group">
-                <a href="mailto:genxdevelopers@gmail.com" className="flex items-center space-x-3 text-gray-300 hover:text-white transition-colors duration-300">
+                <a href="mailto:genx.gdc@gmail.com" className="flex items-center space-x-3 text-gray-300 hover:text-white transition-colors duration-300">
                   <Mail className="w-5 h-5 text-blue-400 group-hover:text-blue-300 flex-shrink-0" />
-                  <span className="text-sm">genxdevelopers@gmail.com</span>
+                  <span className="text-sm">genx.gdc@gmail.com</span>
                 </a>
               </li>
               <li className="group">
-                <a href="tel:+911234567890" className="flex items-center space-x-3 text-gray-300 hover:text-white transition-colors duration-300">
+                <a href="tel:+91**********" className="flex items-center space-x-3 text-gray-300 hover:text-white transition-colors duration-300">
                   <Phone className="w-5 h-5 text-blue-400 group-hover:text-blue-300 flex-shrink-0" />
                   <span className="text-sm">+91 **********</span>
                 </a>
