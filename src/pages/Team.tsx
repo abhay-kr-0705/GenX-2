@@ -59,7 +59,7 @@ const leaders: TeamMember[] = [
     name: 'Abhay Kumar',
     role: 'Leader',
     image: Abhay,
-    instagram: 'https://instagram.com/abhay_kr.0705/',
+    instagram: 'https://www.instagram.com/abhay_kr.07',
     linkedin: 'https://linkedin.com/in/abhay-kumar-81b2a8288/'
   },
   {
@@ -196,7 +196,7 @@ const domainCoLeads: TeamMember[] = [
     role: 'Web Development Co-Lead',
     image: Ankita,
     instagram: 'https://instagram.com/....',
-    linkedin: 'https://linkedin.com/in/....'
+    linkedin: 'https://www.linkedin.com/in/ankitakk'
   },
   {
     id: 21,

@@ -6,12 +6,15 @@ export interface GalleryPhoto {
 }
 
 export interface Gallery {
-  id: string;
+  _id: string;
+  id?: string;
   title: string;
   description: string;
-  photo_count: number;
+  thumbnail: string;
+  photos: GalleryPhoto[];
+  photo_count?: number;
   thumbnail_url?: string;
-  event_id: string;
+  event_id?: string;
 }
 
 export interface GalleryResponse extends Omit<Gallery, 'photo_count'> {

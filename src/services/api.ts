@@ -336,6 +336,26 @@ const updateGalleryPhotos = async (galleryId: string, photos: FormData) => {
   }
 };
 
+// Batch upload photos for gallery
+const batchUploadGalleryPhotos = async (galleryId: string, files: File[]) => {
+  const formData = new FormData();
+  files.forEach(file => {
+    formData.append('photos', file);
+  });
+  
+  try {
+    const response = await api.put(`/gallery/${galleryId}/photos`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  } catch (error) {
+    // Don't show toast for batch uploads as it's handled by the hook
+    throw error;
+  }
+};
+
 const removeGalleryPhoto = async (galleryId: string, photoId: string) => {
   try {
     const response = await api.delete(`/gallery/${galleryId}/photos/${photoId}`);
@@ -464,6 +484,7 @@ export {
   updateGallery,
   deleteGallery,
   updateGalleryPhotos,
+  batchUploadGalleryPhotos,
   removeGalleryPhoto,
   updateGalleryThumbnail,
   uploadImage,

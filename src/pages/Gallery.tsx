@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { getGalleries } from '../services/api';
 import { handleError } from '../utils/errorHandling';
 import { Gallery as GalleryType } from '../types/gallery';
-import { Link } from 'react-router-dom';
 import { Card, Image, Modal, Spin, Space, Button } from 'antd';
-import { EyeOutlined, LeftOutlined, RightOutlined, SwapOutlined, RotateLeftOutlined, RotateRightOutlined, ZoomOutOutlined, ZoomInOutlined } from '@ant-design/icons';
+import { EyeOutlined, LeftOutlined, RightOutlined, SwapOutlined, RotateLeftOutlined, RotateRightOutlined, ZoomOutOutlined, ZoomInOutlined, DownloadOutlined } from '@ant-design/icons';
 import { useSwipeable } from 'react-swipeable';
 
 const GalleryPage = () => {
@@ -61,9 +60,29 @@ const GalleryPage = () => {
   const swipeHandlers = useSwipeable({
     onSwipedLeft: handleNextPhoto,
     onSwipedRight: handlePrevPhoto,
-    preventDefaultTouchmoveEvent: true,
-    trackMouse: true
+    trackMouse: true,
+    delta: 50,
+    preventScrollOnSwipe: true,
+    swipeDuration: 500,
+    touchEventOptions: { passive: false }
   });
+
+  const handleDownload = async (imageUrl: string, filename?: string) => {
+    try {
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename || `gallery-image-${Date.now()}.jpg`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Download failed:', error);
+    }
+  };
 
   if (loading) {
     return (
@@ -89,7 +108,7 @@ const GalleryPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {galleries.map((gallery) => (
             <Card
-              key={gallery.id}
+              key={gallery._id}
               hoverable
               className="overflow-hidden h-full flex flex-col gallery-card"
               cover={
@@ -164,7 +183,7 @@ const GalleryPage = () => {
               onVisibleChange: (vis) => setPreviewVisible(vis),
               current: selectedPhotoIndex || 0,
               countRender: (current, total) => `${current} / ${total}`,
-              toolbarRender: (_, { transform: { scale }, actions: { onFlipY, onFlipX, onRotateLeft, onRotateRight, onZoomOut, onZoomIn }}) => (
+              toolbarRender: (_, { actions: { onFlipY, onFlipX, onRotateLeft, onRotateRight, onZoomOut, onZoomIn }}) => (
                 <div className="ant-image-preview-operations-wrapper">
                   <div className="ant-image-preview-operations">
                     <Space size={12} className="p-2">
@@ -186,6 +205,19 @@ const GalleryPage = () => {
                       <Button type="text" className="text-white hover:text-gray-300" onClick={onZoomIn}>
                         <ZoomInOutlined style={{ fontSize: '20px' }} />
                       </Button>
+                      {/* Download button for mobile view */}
+                      <Button 
+                        type="text" 
+                        className="text-white hover:text-gray-300 md:hidden" 
+                        onClick={() => {
+                          if (selectedGallery && selectedPhotoIndex !== null) {
+                            const currentPhoto = selectedGallery.photos[selectedPhotoIndex];
+                            handleDownload(currentPhoto.url, `${selectedGallery.title}-${selectedPhotoIndex + 1}.jpg`);
+                          }
+                        }}
+                      >
+                        <DownloadOutlined style={{ fontSize: '20px' }} />
+                      </Button>
                     </Space>
                   </div>
                 </div>
@@ -193,22 +225,27 @@ const GalleryPage = () => {
             }}
           >
             {selectedGallery?.photos.map((photo, index) => (
-              <Image 
-                key={index} 
-                src={photo.url} 
-                {...swipeHandlers}
-                onKeyDown={(e) => {
-                  if (e.key === 'ArrowLeft') handlePrevPhoto();
-                  if (e.key === 'ArrowRight') handleNextPhoto();
-                }}
-              />
+              <div key={index} {...swipeHandlers} className="w-full h-full">
+                <Image 
+                  src={photo.url} 
+                  onKeyDown={(e) => {
+                    if (e.key === 'ArrowLeft') handlePrevPhoto();
+                    if (e.key === 'ArrowRight') handleNextPhoto();
+                  }}
+                  style={{ 
+                    touchAction: 'pan-x pan-y',
+                    userSelect: 'none',
+                    WebkitUserSelect: 'none'
+                  }}
+                />
+              </div>
             ))}
           </Image.PreviewGroup>
         </div>
 
         {/* Custom Navigation Buttons - Only visible on desktop */}
         {previewVisible && (
-          <style jsx global>{`
+          <style>{`
             .ant-image-preview-operations {
               background: rgba(0, 0, 0, 0.5) !important;
             }
@@ -216,9 +253,26 @@ const GalleryPage = () => {
             .ant-image-preview-switch-right {
               display: none !important;
             }
+            .ant-image-preview-img-wrapper {
+              touch-action: pan-x pan-y;
+            }
+            .ant-image-preview-wrap {
+              touch-action: pan-x pan-y;
+            }
+            .ant-image-preview-img {
+              transition: transform 0.3s ease;
+            }
             @media (min-width: 768px) {
               .custom-nav-button {
                 display: block !important;
+              }
+            }
+            @media (max-width: 767px) {
+              .ant-image-preview-operations {
+                bottom: 20px !important;
+                background: rgba(0, 0, 0, 0.8) !important;
+                border-radius: 8px !important;
+                padding: 8px !important;
               }
             }
           `}</style>

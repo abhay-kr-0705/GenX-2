@@ -1,18 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   getGalleries, 
   createGallery, 
-  updateGallery, 
   deleteGallery, 
-  uploadImage,
   removeGalleryPhoto,
-  updateGalleryPhotos,
-  updateGalleryThumbnail
+  updateGalleryThumbnail,
+  batchUploadGalleryPhotos
 } from '../../services/api';
 import { handleError } from '../../utils/errorHandling';
 import { useAuth } from '../../contexts/AuthContext';
-import { Button, Input, Card, Image, Modal, message, Upload } from 'antd';
-import { PlusOutlined, DeleteOutlined, EditOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
+import { useBatchUpload } from '../../hooks/useBatchUpload';
+import ProgressBar from '../../components/ProgressBar';
+import { Button, Input, Card, Image, Modal, message, Upload, Alert, Collapse } from 'antd';
+import type { UploadFile } from 'antd';
+import { PlusOutlined, DeleteOutlined, EditOutlined, ExclamationCircleOutlined, WarningOutlined } from '@ant-design/icons';
 
 interface Photo {
   _id: string;
@@ -29,6 +30,7 @@ interface Gallery {
 }
 
 const { confirm } = Modal;
+const { Panel } = Collapse;
 
 const ManageGallery = () => {
   const [galleries, setGalleries] = useState<Gallery[]>([]);
@@ -37,13 +39,31 @@ const ManageGallery = () => {
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [selectedGallery, setSelectedGallery] = useState<Gallery | null>(null);
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
-  const [fileList, setFileList] = useState<File[]>([]);
+  const [fileList, setFileList] = useState<UploadFile[]>([]);
+  const [actualFiles, setActualFiles] = useState<File[]>([]);
   const [form, setForm] = useState({
     title: '',
     description: ''
   });
+  const [uploadErrors, setUploadErrors] = useState<Array<{ file: string; error: string }>>([]);
+  const [showUploadProgress, setShowUploadProgress] = useState(false);
 
-  const { user } = useAuth();
+  // File validation constants
+  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+  const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+
+  const validateFile = (file: File): string | null => {
+    if (file.size > MAX_FILE_SIZE) {
+      return `File size must be less than 10MB. Current size: ${(file.size / 1024 / 1024).toFixed(2)}MB`;
+    }
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      return `File type not supported. Allowed types: JPEG, PNG, WebP, GIF`;
+    }
+    return null;
+  };
+
+  const { } = useAuth();
+  const { uploadInBatches, isUploading, progress, resetProgress } = useBatchUpload();
 
   useEffect(() => {
     fetchGalleries();
@@ -147,22 +167,53 @@ const ManageGallery = () => {
   };
 
   const handleUpload = async () => {
-    if (!selectedGallery || fileList.length === 0) return;
+    if (!selectedGallery || actualFiles.length === 0) return;
 
-    const formData = new FormData();
-    fileList.forEach(file => {
-      formData.append('photos', file);
+    setShowUploadProgress(true);
+    setUploadErrors([]);
+    resetProgress();
+
+    const uploadFunction = async (batch: File[]) => {
+      return await batchUploadGalleryPhotos(selectedGallery._id, batch);
+    };
+
+    await uploadInBatches(actualFiles, uploadFunction, {
+      batchSize: 3, // Upload 3 photos at a time
+      onProgress: () => {
+        // Progress is automatically handled by the hook
+      },
+      onComplete: (results) => {
+        const { successful, failed } = results;
+        
+        if (failed.length > 0) {
+          const errors = failed.map(f => ({
+            file: f.file.name,
+            error: f.error?.response?.data?.message || f.error?.message || 'Unknown error'
+          }));
+          setUploadErrors(errors);
+        }
+        
+        // Refresh gallery data
+        fetchGalleries();
+        
+        // Update selected gallery with new photos
+        if (successful.length > 0) {
+          const lastSuccessful = successful[successful.length - 1];
+          setSelectedGallery(lastSuccessful);
+        }
+        
+        setFileList([]);
+        
+        // Hide progress after a delay
+        setTimeout(() => {
+          setShowUploadProgress(false);
+        }, 2000);
+      },
+      onError: (error) => {
+        handleError(error, 'Upload process failed');
+        setShowUploadProgress(false);
+      }
     });
-
-    try {
-      const updatedGallery = await updateGalleryPhotos(selectedGallery._id, formData);
-      setSelectedGallery(updatedGallery);
-      setFileList([]);
-      message.success('Photos uploaded successfully');
-      fetchGalleries();
-    } catch (error) {
-      handleError(error, 'Failed to upload photos');
-    }
   };
 
   const handleThumbnailUpload = async () => {
@@ -189,30 +240,64 @@ const ManageGallery = () => {
     }
 
     setLoading(true);
+    setShowUploadProgress(actualFiles.length > 0);
+    setUploadErrors([]);
+    resetProgress();
+    
     try {
+      // First create gallery with thumbnail only
       const formData = new FormData();
       formData.append('title', form.title);
       if (form.description) {
         formData.append('description', form.description);
       }
       formData.append('thumbnail', thumbnailFile);
-      
-      if (fileList.length > 0) {
-        fileList.forEach(file => {
-          formData.append('photos', file);
-        });
-      }
 
       const newGallery = await createGallery(formData);
       setGalleries(prev => [...prev, newGallery]);
+      
+      // If there are photos, upload them in batches
+      if (actualFiles.length > 0) {
+        const uploadFunction = async (batch: File[]) => {
+          return await batchUploadGalleryPhotos(newGallery._id, batch);
+        };
+
+        await uploadInBatches(actualFiles, uploadFunction, {
+          batchSize: 3,
+          onComplete: (results) => {
+            const { failed } = results;
+            
+            if (failed.length > 0) {
+              const errors = failed.map(f => ({
+                file: f.file.name,
+                error: f.error?.response?.data?.message || f.error?.message || 'Unknown error'
+              }));
+              setUploadErrors(errors);
+            }
+            
+            fetchGalleries();
+            
+            setTimeout(() => {
+              setShowUploadProgress(false);
+            }, 2000);
+          },
+          onError: (error) => {
+            handleError(error, 'Failed to upload some photos');
+            setShowUploadProgress(false);
+          }
+        });
+      }
+      
       setModalVisible(false);
       setForm({ title: '', description: '' });
       setThumbnailFile(null);
       setFileList([]);
       message.success('Gallery created successfully');
+      
     } catch (error) {
       console.error('Error creating gallery:', error);
       message.error('Failed to create gallery');
+      setShowUploadProgress(false);
     } finally {
       setLoading(false);
     }
@@ -267,32 +352,111 @@ const ManageGallery = () => {
             <label className="block text-sm font-medium text-gray-700">Thumbnail</label>
             <Upload
               beforeUpload={(file) => {
+                const error = validateFile(file);
+                if (error) {
+                  message.error(`Thumbnail validation failed: ${error}`);
+                  return Upload.LIST_IGNORE;
+                }
                 setThumbnailFile(file);
                 return false;
               }}
               maxCount={1}
-              fileList={thumbnailFile ? [thumbnailFile] : []}
+              fileList={[]}
               onRemove={() => setThumbnailFile(null)}
+              accept=".jpg,.jpeg,.png,.webp,.gif"
             >
-              <Button icon={<PlusOutlined />}>Select Thumbnail</Button>
+              <Button icon={<PlusOutlined />}>
+                Select Thumbnail {thumbnailFile && `(${thumbnailFile.name})`}
+              </Button>
             </Upload>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Photos</label>
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold mb-2">Add Photos</h3>
             <Upload
               beforeUpload={(file) => {
-                setFileList(prev => [...prev, file]);
+                const error = validateFile(file);
+                if (error) {
+                  message.error(`${file.name}: ${error}`);
+                  return Upload.LIST_IGNORE;
+                }
+                const uploadFile: UploadFile = {
+                  uid: file.name + Date.now(),
+                  name: file.name,
+                  status: 'done',
+                  originFileObj: file
+                };
+                setFileList(prev => [...prev, uploadFile]);
+                setActualFiles(prev => [...prev, file]);
                 return false;
               }}
               fileList={fileList}
               multiple
+              disabled={isUploading}
+              accept=".jpg,.jpeg,.png,.webp,.gif"
               onRemove={(file) => {
                 setFileList(prev => prev.filter(f => f.uid !== file.uid));
+                setActualFiles(prev => {
+                  const index = fileList.findIndex(f => f.uid === file.uid);
+                  if (index !== -1) {
+                    const newFiles = [...prev];
+                    newFiles.splice(index, 1);
+                    return newFiles;
+                  }
+                  return prev;
+                });
               }}
             >
-              <Button icon={<PlusOutlined />}>Select Photos</Button>
+              <Button icon={<PlusOutlined />} disabled={isUploading}>
+                Select Photos ({actualFiles.length} selected)
+              </Button>
             </Upload>
+            <div className="text-xs text-gray-500 mt-1">
+              Max file size: 10MB per image. Supported formats: JPEG, PNG, WebP, GIF
+            </div>
+            
+            {fileList.length > 0 && (
+              <div className="mt-4 space-y-3">
+                <div className="flex items-center space-x-2">
+                  <Button
+                    type="primary"
+                    onClick={handleUpload}
+                    loading={isUploading}
+                    disabled={isUploading}
+                  >
+                    {isUploading ? 'Uploading...' : `Upload ${actualFiles.length} Photos`}
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setFileList([]);
+                      setActualFiles([]);
+                      resetProgress();
+                      setUploadErrors([]);
+                    }}
+                    disabled={isUploading}
+                  >
+                    Clear All
+                  </Button>
+                </div>
+                <ProgressBar
+                  current={progress.completed}
+                  total={progress.total}
+                  status={progress.failed > 0 ? 'exception' : 'active'}
+                />
+              </div>
+            )}
+            
+            {uploadErrors.length > 0 && (
+              <Alert
+                message="Some photo uploads failed"
+                description={`${uploadErrors.length} files could not be uploaded`}
+                type="warning"
+                showIcon
+                className="mt-2"
+                closable
+                onClose={() => setUploadErrors([])}
+              />
+            )}
           </div>
 
           <div className="flex justify-end space-x-2 mt-4">
@@ -393,22 +557,101 @@ const ManageGallery = () => {
               <h3 className="text-lg font-semibold mb-2">Add Photos</h3>
               <Upload
                 beforeUpload={(file) => {
-                  setFileList(prev => [...prev, file]);
+                  const uploadFile: UploadFile = {
+                    uid: file.name + Date.now(),
+                    name: file.name,
+                    status: 'done',
+                    originFileObj: file
+                  };
+                  setFileList(prev => [...prev, uploadFile]);
+                  setActualFiles(prev => [...prev, file]);
                   return false;
                 }}
                 fileList={fileList}
                 multiple
+                disabled={isUploading}
+                onRemove={(file) => {
+                  setFileList(prev => prev.filter(f => f.uid !== file.uid));
+                  setActualFiles(prev => {
+                    const index = fileList.findIndex(f => f.uid === file.uid);
+                    if (index !== -1) {
+                      const newFiles = [...prev];
+                      newFiles.splice(index, 1);
+                      return newFiles;
+                    }
+                    return prev;
+                  });
+                }}
               >
-                <Button icon={<PlusOutlined />}>Select Photos</Button>
-              </Upload>
-              {fileList.length > 0 && (
-                <Button
-                  type="primary"
-                  onClick={handleUpload}
-                  className="mt-2"
-                >
-                  Upload Photos
+                <Button icon={<PlusOutlined />} disabled={isUploading}>
+                  Select Photos ({actualFiles.length} selected)
                 </Button>
+              </Upload>
+              
+              {fileList.length > 0 && (
+                <div className="mt-4 space-y-3">
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      type="primary"
+                      onClick={handleUpload}
+                      loading={isUploading}
+                      disabled={isUploading}
+                    >
+                      {isUploading ? 'Uploading...' : `Upload ${actualFiles.length} Photos`}
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        setFileList([]);
+                        setActualFiles([]);
+                        resetProgress();
+                        setUploadErrors([]);
+                      }}
+                      disabled={isUploading}
+                    >
+                      Clear All
+                    </Button>
+                  </div>
+                  
+                  {showUploadProgress && (
+                    <div className="space-y-2">
+                      <div className="text-sm text-gray-600">
+                        Batch {progress.currentBatch} of {progress.totalBatches}
+                      </div>
+                      <ProgressBar
+                        current={progress.completed}
+                        total={progress.total}
+                        status={progress.failed > 0 ? 'exception' : 'active'}
+                      />
+                      <div className="text-xs text-gray-500">
+                        Successful: {progress.successful} | Failed: {progress.failed}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {uploadErrors.length > 0 && (
+                    <Alert
+                      message="Some uploads failed"
+                      description={
+                        <Collapse size="small">
+                          <Panel header={`View ${uploadErrors.length} error(s)`} key="1">
+                            <div className="space-y-1">
+                              {uploadErrors.map((error, index) => (
+                                <div key={index} className="text-xs">
+                                  <strong>{error.file}:</strong> {error.error}
+                                </div>
+                              ))}
+                            </div>
+                          </Panel>
+                        </Collapse>
+                      }
+                      type="warning"
+                      showIcon
+                      icon={<WarningOutlined />}
+                      closable
+                      onClose={() => setUploadErrors([])}
+                    />
+                  )}
+                </div>
               )}
             </div>
 
