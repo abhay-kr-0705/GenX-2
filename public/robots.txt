@@ -1,0 +1,9 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /api
+Disallow: /*.json$
+Disallow: /*?*
+
+Sitemap: https://genx-developers-club.netlify.app/sitemap.xml
