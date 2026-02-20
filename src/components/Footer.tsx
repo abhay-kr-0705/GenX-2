@@ -1,31 +1,30 @@
 import React, { useEffect, useState } from 'react';
 
-const Watermark = () => {
-  const [isVisible, setIsVisible] = useState(true);
+const CopyrightExtension = () => {
+  const [isActive, setIsActive] = useState(true);
 
   useEffect(() => {
-    const enforceWatermark = setInterval(() => {
-      const wm = document.getElementById('dev-watermark');
-      if (!wm) {
-        setIsVisible(false);
-        // If they removed it from DOM, we just re-render our React controlled one
-        setTimeout(() => setIsVisible(true), 100);
+    const vc = setInterval(() => {
+      const el = document.getElementById('brand-text-ext');
+      if (!el) {
+        setIsActive(false);
+        setTimeout(() => setIsActive(true), 100);
       } else {
-        const style = window.getComputedStyle(wm);
+        const style = window.getComputedStyle(el);
         if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') {
-          wm.style.display = 'block';
-          wm.style.visibility = 'visible';
-          wm.style.opacity = '1';
+          el.style.display = 'block';
+          el.style.visibility = 'visible';
+          el.style.opacity = '1';
         }
       }
     }, 1000);
-    return () => clearInterval(enforceWatermark);
+    return () => clearInterval(vc);
   }, []);
 
-  if (!isVisible) return null;
+  if (!isActive) return null;
 
   return (
-    <p className="text-sm text-gray-400" id="dev-watermark" style={{ display: 'block', visibility: 'visible', opacity: 1 }}>
+    <p className="text-sm text-gray-400" id="brand-text-ext" style={{ display: 'block', visibility: 'visible', opacity: 1 }}>
       <a href="https://www.linkedin.com/in/abhay-kumar-81b2a8288/" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors duration-300 flex items-center space-x-1">
         <span>Developed with</span>
         <span className="text-red-500 animate-pulse">❤</span>
@@ -147,7 +146,7 @@ const Footer = () => {
               <p className="text-sm text-gray-400">
                 &copy; {new Date().getFullYear()} GenX Developers Club. All rights reserved.
               </p>
-              <Watermark />
+              <CopyrightExtension />
             </div>
             <div className="flex space-x-8">
               <Link to="/privacy" className="text-sm text-gray-400 hover:text-white transition-colors duration-300">
