@@ -1,4 +1,39 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+
+const Watermark = () => {
+  const [isVisible, setIsVisible] = useState(true);
+
+  useEffect(() => {
+    const enforceWatermark = setInterval(() => {
+      const wm = document.getElementById('dev-watermark');
+      if (!wm) {
+        setIsVisible(false);
+        // If they removed it from DOM, we just re-render our React controlled one
+        setTimeout(() => setIsVisible(true), 100);
+      } else {
+        const style = window.getComputedStyle(wm);
+        if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') {
+          wm.style.display = 'block';
+          wm.style.visibility = 'visible';
+          wm.style.opacity = '1';
+        }
+      }
+    }, 1000);
+    return () => clearInterval(enforceWatermark);
+  }, []);
+
+  if (!isVisible) return null;
+
+  return (
+    <p className="text-sm text-gray-400" id="dev-watermark" style={{ display: 'block', visibility: 'visible', opacity: 1 }}>
+      <a href="https://www.linkedin.com/in/abhay-kumar-81b2a8288/" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors duration-300 flex items-center space-x-1">
+        <span>Developed with</span>
+        <span className="text-red-500 animate-pulse">❤</span>
+        <span>by Abhay Kumar</span>
+      </a>
+    </p>
+  );
+};
 import { Instagram, MessageCircle, Linkedin, Mail, MapPin, Phone, Book, Image, Users, Calendar } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -14,34 +49,34 @@ const Footer = () => {
               <h3 className="text-3xl font-bold bg-gradient-to-r from-blue-400 via-blue-500 to-purple-600 bg-clip-text text-transparent inline-block">
                 GenX Developers
               </h3>
-              <div className="h-1 w-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded mt-2"></div>
+              <div className="h-1 w-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full mt-2"></div>
             </div>
             <p className="text-gray-300 text-sm leading-relaxed">
               Empowering the next generation of developers through innovation, collaboration, and excellence at Sereshah Engineering College.
             </p>
             <div className="flex items-center space-x-6">
-              <a 
-                href="https://www.instagram.com/genx_developers/profilecard/?igsh=eXRjaWllaHQ4eDM2" 
-                target="_blank" 
-                rel="noopener noreferrer" 
+              <a
+                href="https://www.instagram.com/genx_developers/profilecard/?igsh=eXRjaWllaHQ4eDM2"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-gray-400 hover:text-pink-500 transform hover:scale-110 transition-all duration-300"
                 aria-label="Instagram"
               >
                 <Instagram className="w-6 h-6" />
               </a>
-              <a 
-                href="https://chat.whatsapp.com/EukTAUWa1GlHvKvill10Rb" 
-                target="_blank" 
-                rel="noopener noreferrer" 
+              <a
+                href="https://chat.whatsapp.com/EukTAUWa1GlHvKvill10Rb"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-gray-400 hover:text-green-500 transform hover:scale-110 transition-all duration-300"
                 aria-label="WhatsApp"
               >
                 <MessageCircle className="w-6 h-6" />
               </a>
-              <a 
-                href="https://www.linkedin.com/company/genx-developers-group/" 
-                target="_blank" 
-                rel="noopener noreferrer" 
+              <a
+                href="https://www.linkedin.com/company/genx-developers-group/"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-gray-400 hover:text-blue-500 transform hover:scale-110 transition-all duration-300"
                 aria-label="LinkedIn"
               >
@@ -86,7 +121,7 @@ const Footer = () => {
               <li className="group">
                 <a href="https://maps.google.com" target="_blank" rel="noopener noreferrer" className="flex items-start space-x-3 text-gray-300 hover:text-white transition-colors duration-300">
                   <MapPin className="w-5 h-5 text-blue-400 group-hover:text-blue-300 flex-shrink-0 mt-1" />
-                  <span className="text-sm">Sereshah Engineering College, Sasaram, Bihar, India</span>
+                  <span className="text-sm">Sershah Engineering College, Sasaram, Bihar, India</span>
                 </a>
               </li>
               <li className="group">
@@ -108,9 +143,12 @@ const Footer = () => {
         {/* Bottom Bar with Gradient Border */}
         <div className="mt-16 pt-8 border-t border-gray-800">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-            <p className="text-sm text-gray-400">
-              &copy; {new Date().getFullYear()} GenX Developers Club. All rights reserved.
-            </p>
+            <div className="flex flex-col space-y-2">
+              <p className="text-sm text-gray-400">
+                &copy; {new Date().getFullYear()} GenX Developers Club. All rights reserved.
+              </p>
+              <Watermark />
+            </div>
             <div className="flex space-x-8">
               <Link to="/privacy" className="text-sm text-gray-400 hover:text-white transition-colors duration-300">
                 Privacy Policy

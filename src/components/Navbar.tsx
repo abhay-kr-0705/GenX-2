@@ -42,7 +42,7 @@ const Navbar = () => {
     const baseClasses = "px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200";
     const activeClasses = "text-blue-600 bg-blue-50";
     const inactiveClasses = "text-gray-700 hover:text-blue-600 hover:bg-blue-50";
-    
+
     return `${baseClasses} ${isActivePath(path) ? activeClasses : inactiveClasses}`;
   };
 
@@ -63,7 +63,7 @@ const Navbar = () => {
         <div className="flex justify-between h-16">
           <div className="flex">
             <Link to="/" className="flex items-center space-x-2">
-              <img src={logo} alt="GenX Logo" className="h-8 w-auto" />
+              <img src={logo} alt="GenX Logo" className="h-8 w-auto rounded-lg shadow-sm border border-gray-100/50" />
               <span className="text-xl font-bold text-gray-900">GenX Developers Club</span>
             </Link>
           </div>
@@ -102,9 +102,9 @@ const Navbar = () => {
         <div className="md:hidden bg-white border-t">
           <div className="flex flex-col space-y-2 px-4 pt-2 pb-4">
             {links.map(({ id, link, text }) => (
-              <Link 
-                key={id} 
-                to={link} 
+              <Link
+                key={id}
+                to={link}
                 className={`block ${getLinkClasses(link)}`}
                 onClick={() => setIsOpen(false)}
               >
@@ -112,8 +112,8 @@ const Navbar = () => {
               </Link>
             ))}
             {user ? (
-              <Link 
-                to="/profile" 
+              <Link
+                to="/profile"
                 className={`block ${getLinkClasses('/profile')}`}
                 onClick={() => setIsOpen(false)}
               >
